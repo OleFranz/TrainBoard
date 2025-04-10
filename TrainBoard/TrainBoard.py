@@ -21,8 +21,6 @@ class TrainBoard:
             Graph.Clear()
         for Image in Self.__Images__:
             Image.Clear()
-        try: shutil.rmtree(Self.__LogPath__)
-        except: pass
 
 
 class Graph:

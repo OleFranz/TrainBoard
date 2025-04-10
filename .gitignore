@@ -1,5 +1,8 @@
 # Ignore the pycache
 **/__pycache__
 
-# Ignore the test logs
-TrainBoard/logs
+# Ignore the logs
+**/logs
+
+# Ignore the settings file
+App/settings.json
