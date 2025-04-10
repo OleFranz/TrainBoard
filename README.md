@@ -7,5 +7,6 @@ Track, visualize and log ML model training
 
 ```
 git clone https://github.com/OleFranz/TrainBoard.git
-pip install TrainBoard
+cd TrainBoard
+pip install -r requirements.txt
 ```
