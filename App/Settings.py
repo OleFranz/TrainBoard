@@ -1,6 +1,5 @@
-import variables
+import Variables
 import json
-
 
 def EnsureFile(FilePath:str):
     try:
@@ -14,11 +13,10 @@ def EnsureFile(FilePath:str):
         with open(FilePath, "w") as File:
             File.write("{}")
 
-
 def Get(Category:str, Name:str, Value:any=None):
     try:
-        EnsureFile(f"{variables.Path}settings.json")
-        with open(f"{variables.Path}settings.json", "r") as File:
+        EnsureFile(f"{Variables.Path}Settings.json")
+        with open(f"{Variables.Path}Settings.json", "r") as File:
             Settings = json.load(File)
 
         if Settings[Category][Name] == None:
@@ -32,11 +30,10 @@ def Get(Category:str, Name:str, Value:any=None):
         else:
             pass
 
-
 def Set(Category:str, Name:str, Data:any):
     try:
-        EnsureFile(f"{variables.Path}settings.json")
-        with open(f"{variables.Path}settings.json", "r") as File:
+        EnsureFile(f"{Variables.Path}Settings.json")
+        with open(f"{Variables.Path}Settings.json", "r") as File:
             Settings = json.load(File)
 
         if not Category in Settings:
@@ -46,7 +43,7 @@ def Set(Category:str, Name:str, Data:any):
         if Category in Settings:
             Settings[Category][Name] = Data
 
-        with open(f"{variables.Path}settings.json", "w") as File:
+        with open(f"{Variables.Path}Settings.json", "w") as File:
             File.truncate(0)
             json.dump(Settings, File, indent=6)
     except:

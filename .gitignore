@@ -5,4 +5,4 @@
 **/logs
 
 # Ignore the settings file
-App/settings.json
+App/Settings.json
