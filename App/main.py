@@ -63,6 +63,7 @@ while Variables.Break == False:
 
     SimpleWindow.Show(Name=Variables.WindowName, Frame=Frame)
     if SimpleWindow.GetOpen(Name=Variables.WindowName) != True:
+        Console.RestoreConsole()
         Variables.Break = True
 
     Time = time.time()
@@ -74,3 +75,5 @@ while Variables.Break == False:
     TimeToSleep = 1/Variables.DynamicFPS - (time.perf_counter() - Start)
     if TimeToSleep > 0:
         time.sleep(TimeToSleep)
+
+Console.CloseConsole()
