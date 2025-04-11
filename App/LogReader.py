@@ -4,9 +4,47 @@ import traceback
 import Variables
 import Settings
 import hashlib
+import ImageUI
 import pickle
 import time
 import os
+
+
+def ClearLogPath():
+    Variables.LogPath = ""
+    Settings.Set("Log", "Path", Variables.LogPath)
+    ImageUI.SetInput("LogPathInput", Variables.LogPath)
+
+
+def SetLogPath(Path:str):
+    if Path != "":
+        Path = Path.replace("'", "").replace('"', "").replace("\\", "/")
+        if Path[-1] != "/": Path += "/"
+
+        if os.path.isdir(Path):
+            Variables.LogPath = Path
+            LogPathHistory = Settings.Get("Log", "PathHistory", [])
+            if Variables.LogPath not in LogPathHistory:
+                LogPathHistory.insert(0, Variables.LogPath)
+                Variables.LogPathHistory = LogPathHistory
+            Settings.Set("Log", "PathHistory", LogPathHistory)
+        else:
+            ImageUI.Popup(Text="Invalid path",
+                          StartX1=Variables.Background.shape[1] / 2 - 100,
+                          StartY1=Variables.Background.shape[0],
+                          StartX2=Variables.Background.shape[1] / 2 + 100,
+                          StartY2=Variables.Background.shape[0] + 40,
+                          EndX1=Variables.Background.shape[1] / 2 - 150,
+                          EndY1=Variables.Background.shape[0] - 50,
+                          EndX2=Variables.Background.shape[1] / 2 + 150,
+                          EndY2=Variables.Background.shape[0] - 10,
+                          ID="InvalidPathPopup",
+                          ShowDuration=3,
+                          RoundCorners=10,
+                          TextColor=(50, 50, 255))
+
+        Settings.Set("Log", "Path", Variables.LogPath)
+        ImageUI.SetInput("LogPathInput", Variables.LogPath)
 
 
 def LogReaderThread():
@@ -14,7 +52,7 @@ def LogReaderThread():
         LastFiles = []
         while Variables.Break == False:
             Start = time.time()
-            if Variables.LogPath != "":
+            if Variables.LogPath != "" and os.path.isdir(Variables.LogPath):
                 Files = []
 
                 for FileName in os.listdir(Variables.LogPath):

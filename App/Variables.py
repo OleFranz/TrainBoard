@@ -5,11 +5,13 @@ import os
 Path = os.path.dirname(os.path.abspath(__file__))
 if Path[-1] != "/": Path += "/"
 
-LogPath = ""
+LogPath = Settings.Get("Log", "Path", "")
+LogPathHistory = Settings.Get("Log", "PathHistory", [])
 
 Break = False
 DynamicFPS = 10
 
+LastMouseMove = 0
 LastMouseInput = 0
 LastWindowMove = 0
 LastWindowResize = 0
@@ -34,7 +36,7 @@ GraphPosition = 0, 0
 GraphZoom = 1
 GraphUIPositionX1 = 250
 GraphUIPositionY1 = 50
-GraphUIPositionX2 = WindowWidth - 5
-GraphUIPositionY2 = WindowHeight - 5
+GraphUIPositionX2 = WindowWidth - 6
+GraphUIPositionY2 = WindowHeight - 6
 Graph = numpy.zeros((GraphUIPositionY2 - GraphUIPositionY1, GraphUIPositionX2 - GraphUIPositionX1, 3), dtype=numpy.uint8)
 Graph[:] = (25, 25, 25)

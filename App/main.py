@@ -26,10 +26,6 @@ LogReader.StartLogReader()
 Console.HideConsole()
 Mouse.Run()
 
-LastLogPath = Settings.Get("Log", "Path", "")
-if os.path.isdir(LastLogPath) and LastLogPath != "":
-    Variables.LogPath = LastLogPath
-
 while Variables.Break == False:
     Start = time.perf_counter()
 
@@ -40,6 +36,8 @@ while Variables.Break == False:
         Variables.LastWindowResize = time.time()
         Variables.WindowWidth = WindowSize[0]
         Variables.WindowHeight = WindowSize[1]
+        Variables.GraphUIPositionX2 = WindowSize[0] - 6
+        Variables.GraphUIPositionY2 = WindowSize[1] - 6
         Variables.Background = numpy.zeros((Variables.WindowHeight, Variables.WindowWidth, 3), dtype=numpy.uint8)
         Variables.Background[:] = (28, 28, 28)
         Settings.Set("Window", "Width", Variables.WindowWidth)
@@ -64,6 +62,16 @@ while Variables.Break == False:
                     ID="GraphImage",
                     RoundCorners=20)
 
+        ImageUI.Label(Text="TrainBoard",
+                      X1=0,
+                      Y1=0,
+                      X2=Variables.GraphUIPositionX1,
+                      Y2=Variables.GraphUIPositionY1,
+                      Align="Left",
+                      ID="LogPathLabel",
+                      FontSize=25,
+                      FontType="Candarab")
+
         ImageUI.Button(Text="Graphs",
                        X1=Variables.GraphUIPositionX1,
                        Y1=5,
@@ -79,6 +87,15 @@ while Variables.Break == False:
                        Y2=Variables.GraphUIPositionY1 - 5,
                        ID="GraphsTab",
                        RoundCorners=10)
+
+        ImageUI.Button(Text="Change log path",
+                       X1=5,
+                       Y1=Variables.GraphUIPositionY2 - 40,
+                       X2=Variables.GraphUIPositionX1 - 5,
+                       Y2=Variables.GraphUIPositionY2,
+                       ID="ChangeLogPathButton",
+                       RoundCorners=10,
+                       OnPress=LogReader.ClearLogPath)
 
     else:
 
@@ -100,27 +117,27 @@ while Variables.Break == False:
                       TextAlign="Center",
                       ID="LogPathInput",
                       RoundCorners=10,
-                      OnChange=lambda Text: None if Text == "" else {
-                          setattr(Variables, "LogPath", Text.replace("'", "").replace('"', "").replace("\\", "/") + ("/" if Text[-1] != "/" else ""))
-                          if os.path.isdir(Text.replace("'", "").replace('"', "")) else setattr(Variables, "LogPath", ""),
-                          ImageUI.SetInput("LogPathInput", Variables.LogPath),
-                          Settings.Set("Log", "Path", Variables.LogPath)
-                          if os.path.isdir(Variables.LogPath) else
-                          ImageUI.Popup(Text="Invalid path",
-                                        StartX1=Variables.Background.shape[1] / 2 - 100,
-                                        StartY1=Variables.Background.shape[0],
-                                        StartX2=Variables.Background.shape[1] / 2 + 100,
-                                        StartY2=Variables.Background.shape[0] + 40,
-                                        EndX1=Variables.Background.shape[1] / 2 - 150,
-                                        EndY1=Variables.Background.shape[0] - 50,
-                                        EndX2=Variables.Background.shape[1] / 2 + 150,
-                                        EndY2=Variables.Background.shape[0] - 10,
-                                        ID="InvalidPathPopup",
-                                        ShowDuration=3,
-                                        RoundCorners=10,
-                                        TextColor=(50, 50, 255))
-                      })
+                      OnChange=LogReader.SetLogPath)
 
+        for i in range(min(len(Variables.LogPathHistory), 3)):
+            ImageUI.Button(Text=Variables.LogPathHistory[i],
+                           X1=Variables.Background.shape[1] / 2 - 225,
+                           Y1=Variables.Background.shape[0] / 2 + 30 + 35 * i,
+                           X2=Variables.Background.shape[1] / 2 + 190,
+                           Y2=Variables.Background.shape[0] / 2 + 60 + 35 * i,
+                           ID=f"LogPathHistoryButton{i}Select",
+                           FontSize=12,
+                           RoundCorners=10,
+                           OnPress=lambda i=i: LogReader.SetLogPath(Variables.LogPathHistory[i]))
+
+            ImageUI.Button(Text="X",
+                           X1=Variables.Background.shape[1] / 2 + 195,
+                           Y1=Variables.Background.shape[0] / 2 + 30 + 35 * i,
+                           X2=Variables.Background.shape[1] / 2 + 225,
+                           Y2=Variables.Background.shape[0] / 2 + 60 + 35 * i,
+                           ID=f"LogPathHistoryButton{i}Remove",
+                           RoundCorners=10,
+                           OnPress=lambda i=i: {Variables.LogPathHistory.remove(Variables.LogPathHistory[i]), Settings.Set("Log", "PathHistory", Variables.LogPathHistory)})
 
     WindowHandle = SimpleWindow.GetHandle(Name=Variables.WindowName)
     Frame = ImageUI.Update(WindowHWND=WindowHandle, Frame=Variables.Background)
@@ -133,7 +150,7 @@ while Variables.Break == False:
     Time = time.time()
     if Time - Variables.LastMouseInput < 3 or Time - Variables.LastWindowResize < 3 or Time - Variables.LastWindowMove < 3:
         Variables.DynamicFPS = 60
-    elif Variables.LogPath == "":
+    elif Variables.LogPath == "" or Time - Variables.LastMouseMove < 1:
         Variables.DynamicFPS = 30
     else:
         Variables.DynamicFPS = 10

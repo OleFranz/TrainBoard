@@ -23,7 +23,9 @@ def Update():
 
         Content = (len(Variables.GraphContent),
                    Variables.GraphPosition,
-                   Variables.GraphZoom)
+                   Variables.GraphZoom,
+                   Variables.WindowWidth,
+                   Variables.WindowHeight)
 
         if LastContent != Content:
             GraphWidth = Variables.GraphUIPositionX2 - Variables.GraphUIPositionX1

@@ -15,9 +15,10 @@ def Run():
     try:
         def RunThread():
             try:
-                LastScrollWheel = 0
                 MoveStart = 0, 0
                 WasDisabled = False
+                LastScrollWheel = 0
+                LastMousePosition = 0, 0
                 while Variables.Break == False:
                     if SimpleWindow.GetForeground(Variables.WindowName) == False:
                         time.sleep(0.1)
@@ -70,6 +71,10 @@ def Run():
                             MoveStart = MouseX - Variables.GraphPosition[0], MouseY - Variables.GraphPosition[1]
                         else:
                             Variables.GraphPosition = (MouseX - MoveStart[0]), (MouseY - MoveStart[1])
+
+                        if LastMousePosition != (MouseX, MouseY):
+                            Variables.LastMouseMove = time.time()
+                            LastMousePosition = MouseX, MouseY
 
                     TimeToSleep = 1/Variables.DynamicFPS - (time.perf_counter() - Start)
                     if TimeToSleep > 0 and time.time() - LastScrollWheel > 3:
