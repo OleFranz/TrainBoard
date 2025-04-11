@@ -18,7 +18,8 @@ def LogReaderThread():
                 Files = []
 
                 for FileName in os.listdir(Variables.LogPath):
-                    Files.append((FileName, hashlib.md5(open(Variables.LogPath + FileName, "rb").read()).hexdigest()))
+                    if FileName.endswith(".pkl"):
+                        Files.append((FileName, hashlib.md5(open(Variables.LogPath + FileName, "rb").read()).hexdigest()))
 
                 FilesSet = set(File[0] for File in Files)
                 LastFilesSet = set(File[0] for File in LastFiles)

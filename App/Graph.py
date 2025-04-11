@@ -30,7 +30,7 @@ def Update():
             GraphHeight = Variables.GraphUIPositionY2 - Variables.GraphUIPositionY1
             if Variables.Graph.shape != (GraphHeight, GraphWidth, 3):
                 Variables.Graph = numpy.zeros((GraphHeight, GraphWidth, 3), numpy.uint8)
-                Variables.Graph[:] = (28, 28, 28)
+                Variables.Graph[:] = (25, 25, 25)
             Frame = Variables.Graph.copy()
 
             for GraphName, GraphDat in Variables.GraphContent:

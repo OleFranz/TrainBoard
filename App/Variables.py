@@ -5,7 +5,7 @@ import os
 Path = os.path.dirname(os.path.abspath(__file__))
 if Path[-1] != "/": Path += "/"
 
-LogPath = "C:/GitHub/TrainBoard/TrainBoard/logs/"
+LogPath = ""
 
 Break = False
 DynamicFPS = 10
@@ -32,9 +32,9 @@ ConsoleHWND = None
 GraphContent = []
 GraphPosition = 0, 0
 GraphZoom = 1
-GraphUIPositionX1 = 300
-GraphUIPositionY1 = 100
-GraphUIPositionX2 = WindowWidth - 10
-GraphUIPositionY2 = WindowHeight - 10
+GraphUIPositionX1 = 250
+GraphUIPositionY1 = 50
+GraphUIPositionX2 = WindowWidth - 5
+GraphUIPositionY2 = WindowHeight - 5
 Graph = numpy.zeros((GraphUIPositionY2 - GraphUIPositionY1, GraphUIPositionX2 - GraphUIPositionX1, 3), dtype=numpy.uint8)
 Graph[:] = (25, 25, 25)
