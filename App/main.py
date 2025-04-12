@@ -26,6 +26,9 @@ LogReader.StartLogReader()
 Console.HideConsole()
 Mouse.Run()
 
+ImageUI.Colors.SwitchEnabledColor = (30, 125, 255)
+ImageUI.Colors.SwitchEnabledHoverColor = (30, 125, 255)
+
 while Variables.Break == False:
     Start = time.perf_counter()
 
@@ -51,6 +54,11 @@ while Variables.Break == False:
         Settings.Set("Window", "Y", Variables.WindowY)
 
 
+    Left = 0
+    Right = Variables.Background.shape[1] - 1
+    Top = 0
+    Bottom = Variables.Background.shape[0] - 1
+
     if Variables.LogPath != "":
         Graph.Update()
 
@@ -67,7 +75,7 @@ while Variables.Break == False:
                       Y1=0,
                       X2=Variables.GraphUIPositionX1,
                       Y2=Variables.GraphUIPositionY1,
-                      Align="Left",
+                      Align="Center",
                       ID="LogPathLabel",
                       FontSize=25,
                       FontType="Candarab")
@@ -88,7 +96,19 @@ while Variables.Break == False:
                        ID="GraphsTab",
                        RoundCorners=10)
 
-        ImageUI.Button(Text="Change log path",
+        ImageUI.Button(Text="Center the graph",
+                       X1=5,
+                       Y1=Variables.GraphUIPositionY2 - 85,
+                       X2=Variables.GraphUIPositionX1 - 5,
+                       Y2=Variables.GraphUIPositionY2 - 45,
+                       ID="CenterGraphButton",
+                       RoundCorners=10,
+                       OnPress=lambda: {
+                            setattr(Variables, "GraphPosition", (0, 0)),
+                            setattr(Variables, "GraphZoom", 1)
+                       })
+
+        ImageUI.Button(Text="Change the log path",
                        X1=5,
                        Y1=Variables.GraphUIPositionY2 - 40,
                        X2=Variables.GraphUIPositionX1 - 5,
@@ -97,22 +117,38 @@ while Variables.Break == False:
                        RoundCorners=10,
                        OnPress=LogReader.ClearLogPath)
 
+        for i, GraphName in enumerate(Variables.Graphs):
+            FileName = Variables.Graphs[GraphName]["FileName"]
+            ShowState = Variables.Graphs[GraphName]["Show"]
+            Data = Variables.Graphs[GraphName]["Data"]
+            ImageUI.Switch(Text=GraphName,
+                           X1=5,
+                           Y1=Variables.GraphUIPositionY1 + 10 + 30 * i,
+                           X2=Variables.GraphUIPositionX1 - 5,
+                           Y2=Variables.GraphUIPositionY1 + 35 + 30 * i,
+                           ID=f"GraphSwitch{GraphName}",
+                           State=ShowState,
+                           OnChange=lambda State: {
+                               Settings.Set("Graphs", Variables.LogPath + ":" + GraphName, State),
+                               Variables.Graphs.update({GraphName: {"FileName": FileName, "Show": State, "Data": Data}})
+                           })
+
     else:
 
         ImageUI.Label(Text="TrainBoard",
                       X1=0,
-                      Y1=Variables.Background.shape[0] / 2 - 30,
-                      X2=Variables.Background.shape[1] - 1,
-                      Y2=Variables.Background.shape[0] / 2 - 70,
+                      Y1=Bottom / 2 - 30,
+                      X2=Right,
+                      Y2=Bottom / 2 - 70,
                       Align="Center",
                       ID="LogPathLabel",
                       FontSize=25,
                       FontType="Candarab")
 
-        ImageUI.Input(X1=Variables.Background.shape[1] / 2 - 250,
-                      Y1=Variables.Background.shape[0] / 2 - 20,
-                      X2=Variables.Background.shape[1] / 2 + 250,
-                      Y2=Variables.Background.shape[0] / 2 + 20,
+        ImageUI.Input(X1=Right / 2 - 250,
+                      Y1=Bottom / 2 - 20,
+                      X2=Right / 2 + 250,
+                      Y2=Bottom / 2 + 20,
                       Placeholder="Enter the absolute path to the log folder",
                       TextAlign="Center",
                       ID="LogPathInput",
@@ -121,21 +157,22 @@ while Variables.Break == False:
 
         for i in range(min(len(Variables.LogPathHistory), 3)):
             ImageUI.Button(Text=Variables.LogPathHistory[i],
-                           X1=Variables.Background.shape[1] / 2 - 225,
-                           Y1=Variables.Background.shape[0] / 2 + 30 + 35 * i,
-                           X2=Variables.Background.shape[1] / 2 + 190,
-                           Y2=Variables.Background.shape[0] / 2 + 60 + 35 * i,
+                           X1=Right / 2 - 225,
+                           Y1=Bottom / 2 + 30 + 35 * i,
+                           X2=Right / 2 + 190,
+                           Y2=Bottom / 2 + 60 + 35 * i,
                            ID=f"LogPathHistoryButton{i}Select",
                            FontSize=12,
                            RoundCorners=10,
                            OnPress=lambda i=i: LogReader.SetLogPath(Variables.LogPathHistory[i]))
 
             ImageUI.Button(Text="X",
-                           X1=Variables.Background.shape[1] / 2 + 195,
-                           Y1=Variables.Background.shape[0] / 2 + 30 + 35 * i,
-                           X2=Variables.Background.shape[1] / 2 + 225,
-                           Y2=Variables.Background.shape[0] / 2 + 60 + 35 * i,
+                           X1=Right / 2 + 195,
+                           Y1=Bottom / 2 + 30 + 35 * i,
+                           X2=Right / 2 + 225,
+                           Y2=Bottom / 2 + 60 + 35 * i,
                            ID=f"LogPathHistoryButton{i}Remove",
+                           FontSize=12,
                            RoundCorners=10,
                            OnPress=lambda i=i: {Variables.LogPathHistory.remove(Variables.LogPathHistory[i]), Settings.Set("Log", "PathHistory", Variables.LogPathHistory)})
 

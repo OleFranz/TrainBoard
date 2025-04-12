@@ -31,10 +31,20 @@ Background[:] = (28, 28, 28)
 ConsoleName = None
 ConsoleHWND = None
 
+GraphColors = [
+    (203, 181, 18),
+    (146, 37, 229),
+    (0, 171, 249),
+    (230, 52, 147),
+    (66, 179, 124),
+    (10, 113, 232),
+    (163, 152, 142)
+]
+
 GraphContent = []
 GraphPosition = 0, 0
 GraphZoom = 1
-GraphUIPositionX1 = 250
+GraphUIPositionX1 = 200
 GraphUIPositionY1 = 50
 GraphUIPositionX2 = WindowWidth - 6
 GraphUIPositionY2 = WindowHeight - 6

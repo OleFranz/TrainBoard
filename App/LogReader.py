@@ -11,6 +11,11 @@ import os
 
 
 def ClearLogPath():
+    Variables.Graphs = {}
+    Variables.Images = {}
+    Variables.GraphContent = []
+    Variables.GraphPosition = 0, 0
+    Variables.GraphZoom = 1
     Variables.LogPath = ""
     Settings.Set("Log", "Path", Variables.LogPath)
     ImageUI.SetInput("LogPathInput", Variables.LogPath)
@@ -19,7 +24,7 @@ def ClearLogPath():
 def SetLogPath(Path:str):
     if Path != "":
         Path = Path.replace("'", "").replace('"', "").replace("\\", "/")
-        if Path[-1] != "/": Path += "/"
+        if Path[-1] == "/": Path = Path[:-1]
 
         if os.path.isdir(Path):
             Variables.LogPath = Path
@@ -57,7 +62,7 @@ def LogReaderThread():
 
                 for FileName in os.listdir(Variables.LogPath):
                     if FileName.endswith(".pkl"):
-                        Files.append((FileName, hashlib.md5(open(Variables.LogPath + FileName, "rb").read()).hexdigest()))
+                        Files.append((FileName, hashlib.md5(open(os.path.join(Variables.LogPath, FileName), "rb").read()).hexdigest()))
 
                 FilesSet = set(File[0] for File in Files)
                 LastFilesSet = set(File[0] for File in LastFiles)
@@ -83,27 +88,30 @@ def LogReaderThread():
                             Data = pickle.load(File)
                             if FileName.startswith("Graph"):
                                 AnyGraphChanged = True
-                                ShowState = Settings.Get("Graphs", Data[0], True) if Data[0] not in Variables.Graphs else Variables.Graphs[Data[0]]["Show"]
+                                ShowState = Settings.Get("Graphs", Variables.LogPath + ":" + Data[0], True) if Data[0] not in Variables.Graphs else Variables.Graphs[Data[0]]["Show"]
                                 Variables.Graphs[Data[0]] = {"FileName": FileName, "Show": ShowState, "Data": Data[1]}
+                                Variables.Graphs = {K: V for K, V in sorted(Variables.Graphs.items(), key=lambda Item: Item[1]["Data"][0][1])}
                             elif FileName.startswith("Images"):
                                 AnyImageChanged = True
-                                ShowState = Settings.Get("Images", Data[0], True) if Data[0] not in Variables.Images else Variables.Images[Data[0]]["Show"]
+                                ShowState = Settings.Get("Images", Variables.LogPath + ":" + Data[0], True) if Data[0] not in Variables.Images else Variables.Images[Data[0]]["Show"]
                                 Variables.Images[Data[0]] = {"FileName": FileName, "Show": ShowState, "Data": Data[1]}
+                                Variables.Images = {K: V for K, V in sorted(Variables.Images.items(), key=lambda Item: Item[1]["Data"][0][1])}
                     except:
                         CrashReport("LogReader - Error while loading log file", traceback.format_exc())
 
                 if AnyGraphChanged:
                     Graphs = []
-                    for Graph in Variables.Graphs:
-                        GraphName = Graph
-                        Graph = Variables.Graphs[Graph]
+                    for i, GraphName in enumerate(Variables.Graphs):
+                        Graph = Variables.Graphs[GraphName]
                         GraphData = [(i, Graph["Data"][i][0]) for i in range(len(Graph["Data"]))]
-                        ShowGraph = Graph["Show"]
-                        if ShowGraph == True:
-                            Graphs.append((GraphName, GraphData))
+                        Graphs.append((GraphName, Variables.GraphColors[i % len(Variables.GraphColors)], GraphData))
                     Variables.GraphContent = Graphs.copy()
 
                 LastFiles = Files
+
+            else:
+
+                LastFiles = []
 
             TimeToSleep = 1 - (time.time() - Start)
             if TimeToSleep > 0:

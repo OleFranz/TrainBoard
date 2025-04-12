@@ -36,7 +36,7 @@ def Run():
                     LeftClicked = ctypes.windll.user32.GetKeyState(0x01) & 0x8000 != 0 and WindowX <= MouseX <= WindowX + WindowWidth and WindowY <= MouseY <= WindowY + WindowHeight
                     RightClicked = ctypes.windll.user32.GetKeyState(0x02) & 0x8000 != 0 and WindowX <= MouseX <= WindowX + WindowWidth and WindowY <= MouseY <= WindowY + WindowHeight
 
-                    if LeftClicked == True or RightClicked == True:
+                    if ctypes.windll.user32.GetKeyState(0x01) & 0x8000 != 0 or ctypes.windll.user32.GetKeyState(0x02) & 0x8000 != 0:
                         Variables.LastMouseInput = time.time()
 
                     if WasDisabled:
@@ -76,7 +76,7 @@ def Run():
                             Variables.LastMouseMove = time.time()
                             LastMousePosition = MouseX, MouseY
 
-                    TimeToSleep = 1/Variables.DynamicFPS - (time.perf_counter() - Start)
+                    TimeToSleep = 1/(Variables.DynamicFPS * 2) - (time.perf_counter() - Start)
                     if TimeToSleep > 0 and time.time() - LastScrollWheel > 3:
                         time.sleep(TimeToSleep)
             except:
