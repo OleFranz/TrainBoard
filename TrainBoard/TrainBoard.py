@@ -11,16 +11,20 @@ class TrainBoard:
         Self.__LogPath__ = os.path.abspath(LogPath)
         Self.__Graphs__ = []
         Self.__Images__ = []
-        try: shutil.rmtree(Self.__LogPath__)
-        except: pass
-        try: os.makedirs(Self.__LogPath__, exist_ok=True)
-        except: pass
+        Self.__Models__ = []
+        os.makedirs(Self.__LogPath__, exist_ok=True)
+        for File in os.listdir(Self.__LogPath__):
+            if File.startswith("Graph") or File.startswith("Images") or File.startswith("Model"):
+                try: os.remove(os.path.join(Self.__LogPath__, File))
+                except: pass
 
     def Clear(Self):
         for Graph in Self.__Graphs__:
             Graph.Clear()
         for Image in Self.__Images__:
             Image.Clear()
+        for Model in Self.__Models__:
+            Model.Clear()
 
 
 class Graph:
@@ -33,8 +37,8 @@ class Graph:
         try: os.remove(Self.__LogFilePath__)
         except: pass
 
-    def Add(Self, Value:float):
-        Self.__Graph__.append((Value, time.time()))
+    def Add(Self, Value:float, Epoch:int):
+        Self.__Graph__.append((Value, Epoch, time.time()))
         try:
             with open(Self.__LogFilePath__, "wb") as File:
                 pickle.dump([Self.__Name__, Self.__Graph__], File)
@@ -56,8 +60,8 @@ class Image:
         try: os.remove(Self.__LogFilePath__)
         except: pass
 
-    def Add(Self, Value:numpy.ndarray | torch.Tensor):
-        Self.__Images__.append((Value, time.time()))
+    def Add(Self, Value:numpy.ndarray | torch.Tensor, Epoch:int):
+        Self.__Images__.append((Value, Epoch, time.time()))
         try:
             with open(Self.__LogFilePath__, "wb") as File:
                 pickle.dump([Self.__Name__, Self.__Images__], File)
@@ -65,5 +69,41 @@ class Image:
 
     def Clear(Self):
         Self.__Images__.clear()
+        try: os.remove(Self.__LogFilePath__)
+        except: pass
+
+
+class Model:
+    def __init__(Self, TrainBoard:TrainBoard, Name:str, Model:torch.nn.Module):
+        Self.__TrainBoard__ = TrainBoard
+        Self.__TrainBoard__.__Models__.append(Self)
+        Self.__LogFilePath__ = os.path.join(TrainBoard.__LogPath__, f"Model{len(Self.__TrainBoard__.__Models__)}.pkl")
+        Self.__Name__ = Name
+        try: os.remove(Self.__LogFilePath__)
+        except: pass
+
+        TotalParameters = 0
+        for Parameter in Model.parameters():
+            ParamCount = 1
+            for Dim in Parameter.size():
+                ParamCount *= int(Dim)
+            TotalParameters += ParamCount
+        TrainableParameters = sum(Parameter.numel() for Parameter in Model.parameters() if Parameter.requires_grad)
+        NonTrainableParameters = TotalParameters - TrainableParameters
+        BytesPerParameter = next(Model.parameters()).element_size()
+        ModelSize = (TotalParameters * BytesPerParameter) / (1024 ** 2)
+
+        Self.__Model__ = ({"TotalParameters": TotalParameters,
+                            "TrainableParameters": TrainableParameters,
+                            "NonTrainableParameters": NonTrainableParameters,
+                            "ModelSize": ModelSize},
+                          time.time())
+        try:
+            with open(Self.__LogFilePath__, "wb") as File:
+                pickle.dump([Self.__Name__, Self.__Model__], File)
+        except: pass
+
+    def Clear(Self):
+        Self.__Model__ = None
         try: os.remove(Self.__LogFilePath__)
         except: pass

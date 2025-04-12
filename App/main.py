@@ -5,6 +5,7 @@ import Settings
 import Console
 import ImageUI
 import Graph
+import Model
 import Mouse
 import numpy
 import time
@@ -61,6 +62,7 @@ while Variables.Break == False:
 
     if Variables.LogPath != "":
         Graph.Update()
+        Model.Update()
 
         ImageUI.Image(Image=Graph.Frame,
                     X1=Variables.GraphUIPositionX1,
@@ -83,30 +85,67 @@ while Variables.Break == False:
         ImageUI.Button(Text="Graphs",
                        X1=Variables.GraphUIPositionX1,
                        Y1=5,
-                       X2=(Variables.GraphUIPositionX1 + Variables.GraphUIPositionX2) / 2 - 2.5,
+                       X2=Variables.GraphUIPositionX1 + (Variables.GraphUIPositionX2 - Variables.GraphUIPositionX1) / 3 - 2.5,
                        Y2=Variables.GraphUIPositionY1 - 5,
                        ID="GraphsTab",
-                       RoundCorners=10)
+                       RoundCorners=10,
+                       Color=(30, 125, 255) if Variables.Tab == "Graphs" else ImageUI.Colors.ButtonColor,
+                       HoverColor=(35, 130, 255) if Variables.Tab == "Graphs" else ImageUI.Colors.ButtonHoverColor,
+                       TextColor=(0, 0, 0) if Variables.Tab == "Graphs" else (255, 255, 255),
+                       OnPress=lambda: {Settings.Set("UI", "Tab", "Graphs"), setattr(Variables, "Tab", "Graphs")})
 
         ImageUI.Button(Text="Images",
-                       X1=(Variables.GraphUIPositionX1 + Variables.GraphUIPositionX2) / 2 + 2.5,
+                       X1=Variables.GraphUIPositionX1 + (Variables.GraphUIPositionX2 - Variables.GraphUIPositionX1) / 3 + 2.5,
+                       Y1=5,
+                       X2=Variables.GraphUIPositionX1 + (Variables.GraphUIPositionX2 - Variables.GraphUIPositionX1) / 1.5 - 2.5,
+                       Y2=Variables.GraphUIPositionY1 - 5,
+                       ID="ImagesTab",
+                       RoundCorners=10,
+                       Color=(30, 125, 255) if Variables.Tab == "Images" else ImageUI.Colors.ButtonColor,
+                       HoverColor=(35, 130, 255) if Variables.Tab == "Images" else ImageUI.Colors.ButtonHoverColor,
+                       TextColor=(0, 0, 0) if Variables.Tab == "Images" else (255, 255, 255),
+                       OnPress=lambda: {Settings.Set("UI", "Tab", "Images"), setattr(Variables, "Tab", "Images")})
+
+        ImageUI.Button(Text="Models",
+                       X1=Variables.GraphUIPositionX1 + (Variables.GraphUIPositionX2 - Variables.GraphUIPositionX1) / 1.5 + 2.5,
                        Y1=5,
                        X2=Variables.GraphUIPositionX2,
                        Y2=Variables.GraphUIPositionY1 - 5,
-                       ID="GraphsTab",
-                       RoundCorners=10)
-
-        ImageUI.Button(Text="Center the graph",
-                       X1=5,
-                       Y1=Variables.GraphUIPositionY2 - 85,
-                       X2=Variables.GraphUIPositionX1 - 5,
-                       Y2=Variables.GraphUIPositionY2 - 45,
-                       ID="CenterGraphButton",
+                       ID="ModelsTab",
                        RoundCorners=10,
-                       OnPress=lambda: {
-                            setattr(Variables, "GraphPosition", (0, 0)),
-                            setattr(Variables, "GraphZoom", 1)
-                       })
+                       Color=(30, 125, 255) if Variables.Tab == "Models" else ImageUI.Colors.ButtonColor,
+                       HoverColor=(35, 130, 255) if Variables.Tab == "Models" else ImageUI.Colors.ButtonHoverColor,
+                       TextColor=(0, 0, 0) if Variables.Tab == "Models" else (255, 255, 255),
+                       OnPress=lambda: {Settings.Set("UI", "Tab", "Models"), setattr(Variables, "Tab", "Models")})
+
+        if Variables.Tab == "Graphs":
+            for i, GraphName in enumerate(Variables.Graphs):
+                FileName = Variables.Graphs[GraphName]["FileName"]
+                ShowState = Variables.Graphs[GraphName]["Show"]
+                Data = Variables.Graphs[GraphName]["Data"]
+                ImageUI.Switch(Text=GraphName,
+                            X1=5,
+                            Y1=Variables.GraphUIPositionY1 + 10 + 30 * i,
+                            X2=Variables.GraphUIPositionX1 - 5,
+                            Y2=Variables.GraphUIPositionY1 + 35 + 30 * i,
+                            ID=f"GraphSwitch{GraphName}",
+                            State=ShowState,
+                            OnChange=lambda State, GraphName=GraphName: {
+                                Settings.Set("Graphs", Variables.LogPath + ":" + GraphName, State),
+                                getattr(Variables, "Graphs").__setitem__(GraphName, {"FileName": FileName, "Show": State, "Data": Data})
+                            })
+
+            ImageUI.Button(Text="Center the graph",
+                           X1=5,
+                           Y1=Variables.GraphUIPositionY2 - 85,
+                           X2=Variables.GraphUIPositionX1 - 5,
+                           Y2=Variables.GraphUIPositionY2 - 45,
+                           ID="CenterGraphButton",
+                           RoundCorners=10,
+                           OnPress=lambda: {
+                               setattr(Variables, "GraphPosition", (0, 0)),
+                               setattr(Variables, "GraphZoom", 1)
+                           })
 
         ImageUI.Button(Text="Change the log path",
                        X1=5,
@@ -116,22 +155,6 @@ while Variables.Break == False:
                        ID="ChangeLogPathButton",
                        RoundCorners=10,
                        OnPress=LogReader.ClearLogPath)
-
-        for i, GraphName in enumerate(Variables.Graphs):
-            FileName = Variables.Graphs[GraphName]["FileName"]
-            ShowState = Variables.Graphs[GraphName]["Show"]
-            Data = Variables.Graphs[GraphName]["Data"]
-            ImageUI.Switch(Text=GraphName,
-                           X1=5,
-                           Y1=Variables.GraphUIPositionY1 + 10 + 30 * i,
-                           X2=Variables.GraphUIPositionX1 - 5,
-                           Y2=Variables.GraphUIPositionY1 + 35 + 30 * i,
-                           ID=f"GraphSwitch{GraphName}",
-                           State=ShowState,
-                           OnChange=lambda State: {
-                               Settings.Set("Graphs", Variables.LogPath + ":" + GraphName, State),
-                               Variables.Graphs.update({GraphName: {"FileName": FileName, "Show": State, "Data": Data}})
-                           })
 
     else:
 

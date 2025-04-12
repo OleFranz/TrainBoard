@@ -73,6 +73,7 @@ def LogReaderThread():
 
                 AnyGraphChanged = False
                 AnyImageChanged = False
+                AnyModelChanged = False
 
                 for FileName in RemovedFiles:
                     if FileName.startswith("Graph"):
@@ -81,6 +82,9 @@ def LogReaderThread():
                     elif FileName.startswith("Images"):
                         AnyImageChanged = True
                         Variables.Images.pop(next(ImageName for ImageName in Variables.Images.keys() if Variables.Images[ImageName]["FileName"] == FileName), None)
+                    elif FileName.startswith("Model"):
+                        AnyModelChanged = True
+                        Variables.Models.pop(next(ModelName for ModelName in Variables.Models.keys() if Variables.Models[ModelName]["FileName"] == FileName), None)
 
                 for FileName in NewFiles | ChangedFiles:
                     try:
@@ -90,12 +94,15 @@ def LogReaderThread():
                                 AnyGraphChanged = True
                                 ShowState = Settings.Get("Graphs", Variables.LogPath + ":" + Data[0], True) if Data[0] not in Variables.Graphs else Variables.Graphs[Data[0]]["Show"]
                                 Variables.Graphs[Data[0]] = {"FileName": FileName, "Show": ShowState, "Data": Data[1]}
-                                Variables.Graphs = {K: V for K, V in sorted(Variables.Graphs.items(), key=lambda Item: Item[1]["Data"][0][1])}
+                                Variables.Graphs = {K: V for K, V in sorted(Variables.Graphs.items(), key=lambda Item: Item[1]["Data"][0][2])}
                             elif FileName.startswith("Images"):
                                 AnyImageChanged = True
                                 ShowState = Settings.Get("Images", Variables.LogPath + ":" + Data[0], True) if Data[0] not in Variables.Images else Variables.Images[Data[0]]["Show"]
-                                Variables.Images[Data[0]] = {"FileName": FileName, "Show": ShowState, "Data": Data[1]}
-                                Variables.Images = {K: V for K, V in sorted(Variables.Images.items(), key=lambda Item: Item[1]["Data"][0][1])}
+                                Variables.Images[Data[0]] = {"FileName": FileName, "Data": Data[1]}
+                                Variables.Images = {K: V for K, V in sorted(Variables.Images.items(), key=lambda Item: Item[1]["Data"][0][2])}
+                            elif FileName.startswith("Model"):
+                                Variables.Models[Data[0]] = {"FileName": FileName, "Data": Data[1]}
+                                Variables.Models = {K: V for K, V in sorted(Variables.Models.items(), key=lambda Item: Item[1]["Data"][1])}
                     except:
                         CrashReport("LogReader - Error while loading log file", traceback.format_exc())
 
@@ -103,7 +110,7 @@ def LogReaderThread():
                     Graphs = []
                     for i, GraphName in enumerate(Variables.Graphs):
                         Graph = Variables.Graphs[GraphName]
-                        GraphData = [(i, Graph["Data"][i][0]) for i in range(len(Graph["Data"]))]
+                        GraphData = [(Graph["Data"][i][1], Graph["Data"][i][0]) for i in range(len(Graph["Data"]))]
                         Graphs.append((GraphName, Variables.GraphColors[i % len(Variables.GraphColors)], GraphData))
                     Variables.GraphContent = Graphs.copy()
 

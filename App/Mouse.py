@@ -53,7 +53,7 @@ def Run():
                                 WasDisabled = False
                                 break
 
-                    if WindowX <= MouseX <= WindowX + WindowWidth and WindowY <= MouseY <= WindowY + WindowHeight:
+                    if WindowX <= MouseX <= WindowX + WindowWidth and WindowY <= MouseY <= WindowY + WindowHeight and Variables.Tab == "Graphs":
                         with pynput.mouse.Events() as Events:
                             Event = Events.get()
                             if isinstance(Event, pynput.mouse.Events.Scroll):

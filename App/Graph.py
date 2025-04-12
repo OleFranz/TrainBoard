@@ -28,6 +28,7 @@ def Update():
                    Variables.GraphZoom,
                    Variables.WindowWidth,
                    Variables.WindowHeight,
+                   Variables.Tab,
                    [Graph["Show"] for Graph in Variables.Graphs.values()])
 
         if LastContent != Content:
@@ -39,16 +40,20 @@ def Update():
             Frame = Variables.Graph.copy()
 
 
-            MinX = min([Graph[2][X][0] for Graph in Variables.GraphContent for X in range(len(Graph[2]))]) if len(Variables.GraphContent) > 0 else 0
-            MaxX = max([Graph[2][X][0] for Graph in Variables.GraphContent for X in range(len(Graph[2]))]) if len(Variables.GraphContent) > 0 else 0
-            MinY = min([Graph[2][X][1] for Graph in Variables.GraphContent for X in range(len(Graph[2]))]) if len(Variables.GraphContent) > 0 else 0
-            MaxY = max([Graph[2][X][1] for Graph in Variables.GraphContent for X in range(len(Graph[2]))]) if len(Variables.GraphContent) > 0 else 0
+            if Variables.Tab != "Graphs":
+                LastContent = Content
+                return
+
+
+            MinX = min([Graph[2][X][0] if Variables.Graphs[Graph[0]]["Show"] else 0 for Graph in Variables.GraphContent for X in range(len(Graph[2]))]) if len(Variables.GraphContent) > 0 else 0
+            MaxX = max([Graph[2][X][0] if Variables.Graphs[Graph[0]]["Show"] else 0 for Graph in Variables.GraphContent for X in range(len(Graph[2]))]) if len(Variables.GraphContent) > 0 else 0
+            MinY = min([Graph[2][X][1] if Variables.Graphs[Graph[0]]["Show"] else 0 for Graph in Variables.GraphContent for X in range(len(Graph[2]))]) if len(Variables.GraphContent) > 0 else 0
+            MaxY = max([Graph[2][X][1] if Variables.Graphs[Graph[0]]["Show"] else 0 for Graph in Variables.GraphContent for X in range(len(Graph[2]))]) if len(Variables.GraphContent) > 0 else 0
 
             MinX = MinX - 1
             MaxX = MaxX + 1
             MinY = MinY - (MaxY - MinY) * 0.1
             MaxY = MaxY + (MaxY - MinY) * 0.1
-
 
             XAxisScale = 5
             YAxisScale = 5
@@ -56,13 +61,13 @@ def Update():
             for i in range(XAxisScale + 1):
                 FloatX = i / XAxisScale
                 X, Y = ConvertToImageCoordinate(FloatX, 1)
-                cv2.line(Frame, ConvertToImageCoordinate(FloatX, 0), ConvertToImageCoordinate(FloatX, 1), (180, 180, 180) if FloatX == 0 else (30, 30, 30), 1)
+                cv2.line(Frame, ConvertToImageCoordinate(FloatX, 0), ConvertToImageCoordinate(FloatX, 1), (180, 180, 180) if FloatX == 0 else (50, 50, 50), 1)
                 cv2.line(Frame, (X, Y - 3), (X, Y + 3), (180, 180, 180), 1)
 
             for i in range(YAxisScale + 1):
                 FloatY = 1 - i / YAxisScale
                 X, Y = ConvertToImageCoordinate(0, FloatY)
-                cv2.line(Frame, ConvertToImageCoordinate(0, FloatY), ConvertToImageCoordinate(1, FloatY), (180, 180, 180) if FloatY == 1 else (30, 30, 30), 1)
+                cv2.line(Frame, ConvertToImageCoordinate(0, FloatY), ConvertToImageCoordinate(1, FloatY), (180, 180, 180) if FloatY == 1 else (50, 50, 50), 1)
                 cv2.line(Frame, (X - 3, Y), (X + 3, Y), (180, 180, 180), 1)
 
 

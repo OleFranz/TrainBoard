@@ -16,8 +16,11 @@ LastMouseInput = 0
 LastWindowMove = 0
 LastWindowResize = 0
 
+Tab = Settings.Get("UI", "Tab", "Graphs")
+
 Graphs = {}
 Images = {}
+Models = {}
 
 WindowName = "TrainBoard"
 WindowX = Settings.Get("Window", "X", 100)
