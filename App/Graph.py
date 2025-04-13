@@ -125,10 +125,28 @@ def Update():
                         if len(Graph[2]) == 1:
                             cv2.circle(Frame, (X, Y), 1, Graph[1], 2, cv2.LINE_AA)
                         elif LastPoint != None:
-                            if -10 <= X <= Variables.Graph.shape[1] + 9 and -10 <= Y <= Variables.Graph.shape[0] + 9 or -10 <= LastPoint[0] <= Variables.Graph.shape[1] + 9 and -10 <= LastPoint[1] <= Variables.Graph.shape[0] + 9:
-                                cv2.line(Frame, LastPoint, (X, Y), Graph[1], 1, cv2.LINE_AA)
+                            cv2.line(Frame, LastPoint, (X, Y), Graph[1], 1, cv2.LINE_AA)
                         LastPoint = (X, Y)
 
+            ImageUI.Image(Image=Frame,
+                          X1=Variables.GraphUIPositionX1,
+                          Y1=Variables.GraphUIPositionY1,
+                          X2=Variables.GraphUIPositionX2,
+                          Y2=Variables.GraphUIPositionY2,
+                          ID="GraphImage",
+                          RoundCorners=20)
+
             LastContent = Content
+
+        else:
+
+            ImageUI.Image(Image=Frame,
+                          X1=Variables.GraphUIPositionX1,
+                          Y1=Variables.GraphUIPositionY1,
+                          X2=Variables.GraphUIPositionX2,
+                          Y2=Variables.GraphUIPositionY2,
+                          ID="GraphImage",
+                          RoundCorners=20)
+
     except:
         CrashReport("Graph - Error in function Update.", str(traceback.format_exc()))

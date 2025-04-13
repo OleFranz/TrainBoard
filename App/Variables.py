@@ -53,3 +53,7 @@ GraphUIPositionX2 = WindowWidth - 6
 GraphUIPositionY2 = WindowHeight - 6
 Graph = numpy.zeros((GraphUIPositionY2 - GraphUIPositionY1, GraphUIPositionX2 - GraphUIPositionX1, 3), dtype=numpy.uint8)
 Graph[:] = (25, 25, 25)
+
+ImageContent = []
+SelectedImage = ""
+SelectedImageEpoch = 0

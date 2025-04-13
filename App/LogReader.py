@@ -6,7 +6,10 @@ import Settings
 import hashlib
 import ImageUI
 import pickle
+import numpy
+import torch
 import time
+import cv2
 import os
 
 
@@ -92,13 +95,13 @@ def LogReaderThread():
                             Data = pickle.load(File)
                             if FileName.startswith("Graph"):
                                 AnyGraphChanged = True
-                                ShowState = Settings.Get("Graphs", Variables.LogPath + ":" + Data[0], True) if Data[0] not in Variables.Graphs else Variables.Graphs[Data[0]]["Show"]
+                                ShowState = Settings.Get("Graphs", Variables.LogPath + ":Show:" + Data[0], True) if Data[0] not in Variables.Graphs else Variables.Graphs[Data[0]]["Show"]
                                 Variables.Graphs[Data[0]] = {"FileName": FileName, "Show": ShowState, "Data": Data[1]}
                                 Variables.Graphs = {K: V for K, V in sorted(Variables.Graphs.items(), key=lambda Item: Item[1]["Data"][0][2])}
                             elif FileName.startswith("Images"):
                                 AnyImageChanged = True
-                                ShowState = Settings.Get("Images", Variables.LogPath + ":" + Data[0], True) if Data[0] not in Variables.Images else Variables.Images[Data[0]]["Show"]
-                                Variables.Images[Data[0]] = {"FileName": FileName, "Data": Data[1]}
+                                StrechState = Settings.Get("Images", Variables.LogPath + ":SwapRGBBGR:" + Data[0], False) if Data[0] not in Variables.Images else Variables.Images[Data[0]]["SwapRGBBGR"]
+                                Variables.Images[Data[0]] = {"FileName": FileName, "SwapRGBBGR": StrechState, "Data": Data[1]}
                                 Variables.Images = {K: V for K, V in sorted(Variables.Images.items(), key=lambda Item: Item[1]["Data"][0][2])}
                             elif FileName.startswith("Model"):
                                 Variables.Models[Data[0]] = {"FileName": FileName, "Data": Data[1]}
@@ -113,6 +116,42 @@ def LogReaderThread():
                         GraphData = [(Graph["Data"][i][1], Graph["Data"][i][0]) for i in range(len(Graph["Data"]))]
                         Graphs.append((GraphName, Variables.GraphColors[i % len(Variables.GraphColors)], GraphData))
                     Variables.GraphContent = Graphs.copy()
+
+                if AnyImageChanged:
+                    if Variables.SelectedImage == "":
+                        Name = Settings.Get("Images", Variables.LogPath + ":Selected:", "")
+                        Variables.SelectedImage = Name if Name in Variables.Images else next(iter(Variables.Images))
+                    Images = []
+                    for ImageName in Variables.Images:
+                        Image = Variables.Images[ImageName]
+                        SwapRGBBGR = Image["SwapRGBBGR"]
+                        ImageTemp = []
+                        for i, (Img, Epoch, Time) in enumerate(Image["Data"]):
+                            if Img.dtype == numpy.uint8:
+                                if Img.shape[2] == 1:
+                                    Img = cv2.cvtColor(Img, cv2.COLOR_GRAY2BGR)
+                            elif Img.dtype == numpy.float32:
+                                Img = (Img * 255).astype(numpy.uint8)
+                                if Img.shape[2] == 1:
+                                    Img = cv2.cvtColor(Img, cv2.COLOR_GRAY2BGR)
+                            elif Img.dtype == numpy.float64:
+                                Img = (Img * 255).astype(numpy.uint8)
+                                if Img.shape[2] == 1:
+                                    Img = cv2.cvtColor(Img, cv2.COLOR_GRAY2BGR)
+                            elif Img.dtype != torch.float32:
+                                Img = Img.cpu().to(torch.float32).numpy().transpose(1, 2, 0)
+                                Img = numpy.clip(Img, 0, 1)
+                                Img = (Img * 255).astype(numpy.uint8)
+                            elif Img.dtype == torch.float32:
+                                Img = Img.cpu().numpy().transpose(1, 2, 0)
+                                Img = numpy.clip(Img, 0, 1)
+                                Img = (Img * 255).astype(numpy.uint8)
+                                print(Img.dtype)
+                            ImageTemp.append((Img, Epoch, Time))
+                        Image["Data"] = ImageTemp.copy()
+                        ImageData = [(Image["Data"][i][0], Image["Data"][i][1]) for i in range(len(Image["Data"]))]
+                        Images.append((ImageName, ImageData))
+                    Variables.ImageContent = Images
 
                 LastFiles = Files
 

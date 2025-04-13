@@ -60,8 +60,8 @@ class Image:
         try: os.remove(Self.__LogFilePath__)
         except: pass
 
-    def Add(Self, Value:numpy.ndarray | torch.Tensor, Epoch:int):
-        Self.__Images__.append((Value, Epoch, time.time()))
+    def Add(Self, Image:numpy.ndarray | torch.Tensor, Epoch:int):
+        Self.__Images__.append((Image, Epoch, time.time()))
         try:
             with open(Self.__LogFilePath__, "wb") as File:
                 pickle.dump([Self.__Name__, Self.__Images__], File)
@@ -82,21 +82,21 @@ class Model:
         try: os.remove(Self.__LogFilePath__)
         except: pass
 
-        TotalParameters = 0
+        Self.TotalParameters = 0
         for Parameter in Model.parameters():
             ParamCount = 1
             for Dim in Parameter.size():
                 ParamCount *= int(Dim)
-            TotalParameters += ParamCount
-        TrainableParameters = sum(Parameter.numel() for Parameter in Model.parameters() if Parameter.requires_grad)
-        NonTrainableParameters = TotalParameters - TrainableParameters
+            Self.TotalParameters += ParamCount
+        Self.TrainableParameters = sum(Parameter.numel() for Parameter in Model.parameters() if Parameter.requires_grad)
+        Self.NonTrainableParameters = Self.TotalParameters - Self.TrainableParameters
         BytesPerParameter = next(Model.parameters()).element_size()
-        ModelSize = (TotalParameters * BytesPerParameter) / (1024 ** 2)
+        Self.ModelSize = (Self.TotalParameters * BytesPerParameter) / (1024 ** 2)
 
-        Self.__Model__ = ({"TotalParameters": TotalParameters,
-                            "TrainableParameters": TrainableParameters,
-                            "NonTrainableParameters": NonTrainableParameters,
-                            "ModelSize": ModelSize},
+        Self.__Model__ = ({"TotalParameters": Self.TotalParameters,
+                            "TrainableParameters": Self.TrainableParameters,
+                            "NonTrainableParameters": Self.NonTrainableParameters,
+                            "ModelSize": Self.ModelSize},
                           time.time())
         try:
             with open(Self.__LogFilePath__, "wb") as File:

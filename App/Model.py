@@ -2,8 +2,6 @@ from CrashReport import CrashReport
 import traceback
 import Variables
 import ImageUI
-import numpy
-import cv2
 
 
 def Update():
