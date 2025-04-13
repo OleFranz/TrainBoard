@@ -11,8 +11,8 @@ Frame = None
 def ConvertToImageCoordinate(X, Y, Round=True):
     Right = Variables.Graph.shape[1]
     Bottom = Variables.Graph.shape[0]
-    X = ((X + 72 / Right) * Right * ((Right - 84) / Right) + Variables.GraphPosition[0] * 1 / Variables.GraphZoom) * Variables.GraphZoom
-    Y = ((Y + 24 / Bottom) * Bottom * ((Bottom - 48) / Bottom) + Variables.GraphPosition[1] * 1 / Variables.GraphZoom) * Variables.GraphZoom
+    X = ((X + 72 / Right) * Right * ((Right - 89) / Right) + Variables.GraphPosition[0] * 1 / Variables.GraphZoom) * Variables.GraphZoom
+    Y = ((Y + 27 / Bottom) * Bottom * ((Bottom - 49) / Bottom) + Variables.GraphPosition[1] * 1 / Variables.GraphZoom) * Variables.GraphZoom
     if Round == True:
         X = round(X)
         Y = round(Y)
@@ -63,7 +63,6 @@ def Update():
             if Variables.Tab != "Graphs":
                 LastContent = Content
                 return
-
 
             MinX = min([Graph[2][X][0] if Variables.Graphs[Graph[0]]["Show"] else 0 for Graph in Variables.GraphContent for X in range(len(Graph[2]))]) if len(Variables.GraphContent) > 0 else 0
             MaxX = max([Graph[2][X][0] if Variables.Graphs[Graph[0]]["Show"] else 0 for Graph in Variables.GraphContent for X in range(len(Graph[2]))]) if len(Variables.GraphContent) > 0 else 0
@@ -126,9 +125,9 @@ def Update():
                         if len(Graph[2]) == 1:
                             cv2.circle(Frame, (X, Y), 1, Graph[1], 2, cv2.LINE_AA)
                         elif LastPoint != None:
-                            cv2.line(Frame, LastPoint, (X, Y), Graph[1], 1, cv2.LINE_AA)
+                            if -10 <= X <= Variables.Graph.shape[1] + 9 and -10 <= Y <= Variables.Graph.shape[0] + 9 or -10 <= LastPoint[0] <= Variables.Graph.shape[1] + 9 and -10 <= LastPoint[1] <= Variables.Graph.shape[0] + 9:
+                                cv2.line(Frame, LastPoint, (X, Y), Graph[1], 1, cv2.LINE_AA)
                         LastPoint = (X, Y)
-
 
             LastContent = Content
     except:

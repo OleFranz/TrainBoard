@@ -116,6 +116,13 @@ def LogReaderThread():
 
                 LastFiles = Files
 
+            elif os.path.exists(Variables.LogPath) == False:
+         
+                Variables.Graphs = {}
+                Variables.Images = {}
+                Variables.Models = {}
+                Variables.GraphContent = []
+
             else:
 
                 LastFiles = []

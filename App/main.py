@@ -126,7 +126,7 @@ while Variables.Break == False:
                 ImageUI.Switch(Text=GraphName,
                             X1=5,
                             Y1=Variables.GraphUIPositionY1 + 10 + 30 * i,
-                            X2=Variables.GraphUIPositionX1 - 5,
+                            X2=Variables.GraphUIPositionX1 - 26,
                             Y2=Variables.GraphUIPositionY1 + 35 + 30 * i,
                             ID=f"GraphSwitch{GraphName}",
                             State=ShowState,
@@ -134,6 +134,17 @@ while Variables.Break == False:
                                 Settings.Set("Graphs", Variables.LogPath + ":" + GraphName, State),
                                 getattr(Variables, "Graphs").__setitem__(GraphName, {"FileName": FileName, "Show": State, "Data": Data})
                             })
+
+                ColorImage = numpy.zeros((15, 15, 3), numpy.uint8)
+                ColorsFound = [Graph[1] for Graph in Variables.GraphContent if Graph[0] == GraphName]
+                ColorImage[:] = ColorsFound[0] if len(ColorsFound) > 0 else (28, 28, 28)
+                ImageUI.Image(Image=ColorImage,
+                              X1=Variables.GraphUIPositionX1 - 21,
+                              Y1=Variables.GraphUIPositionY1 + 15 + 30 * i,
+                              X2=Variables.GraphUIPositionX1 - 6,
+                              Y2=Variables.GraphUIPositionY1 + 30 + 30 * i,
+                              ID=f"GraphColor{GraphName}",
+                              RoundCorners=12)
 
             ImageUI.Button(Text="Center the graph",
                            X1=5,
@@ -187,7 +198,7 @@ while Variables.Break == False:
                            ID=f"LogPathHistoryButton{i}Select",
                            FontSize=12,
                            RoundCorners=10,
-                           OnPress=lambda i=i: LogReader.SetLogPath(Variables.LogPathHistory[i]))
+                           OnPress=lambda i=i: {os.makedirs(Variables.LogPathHistory[i], exist_ok=True), LogReader.SetLogPath(Variables.LogPathHistory[i])})
 
             ImageUI.Button(Text="X",
                            X1=Right / 2 + 195,

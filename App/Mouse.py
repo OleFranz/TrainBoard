@@ -57,15 +57,16 @@ def Run():
                         with pynput.mouse.Events() as Events:
                             Event = Events.get()
                             if isinstance(Event, pynput.mouse.Events.Scroll):
-                                LastScrollWheel = time.time()
-                                Variables.LastMouseInput = time.time()
-                                CanvasX = (MouseX - WindowX - Variables.GraphPosition[0]) / Variables.GraphZoom
-                                CanvasY = (MouseY - WindowY - Variables.GraphPosition[1]) / Variables.GraphZoom
-                                if Variables.GraphZoom < 10000:
-                                    Variables.GraphZoom = Variables.GraphZoom * 1.1 if Event.dy > 0 else Variables.GraphZoom / 1.1
-                                elif Event.dy < 0:
-                                    Variables.GraphZoom /= 1.1
-                                Variables.GraphPosition = (MouseX - WindowX - CanvasX * Variables.GraphZoom, MouseY - WindowY - CanvasY * Variables.GraphZoom)
+                                if RightClicked == False:
+                                    LastScrollWheel = time.time()
+                                    Variables.LastMouseInput = time.time()
+                                    CanvasX = (MouseX - WindowX - Variables.GraphPosition[0]) / Variables.GraphZoom
+                                    CanvasY = (MouseY - WindowY - Variables.GraphPosition[1]) / Variables.GraphZoom
+                                    if Variables.GraphZoom < 10000:
+                                        Variables.GraphZoom = Variables.GraphZoom * 1.1 if Event.dy > 0 else Variables.GraphZoom / 1.1
+                                    elif Event.dy < 0:
+                                        Variables.GraphZoom /= 1.1
+                                    Variables.GraphPosition = (MouseX - WindowX - CanvasX * Variables.GraphZoom, MouseY - WindowY - CanvasY * Variables.GraphZoom)
 
                         if RightClicked == False:
                             MoveStart = MouseX - Variables.GraphPosition[0], MouseY - Variables.GraphPosition[1]
