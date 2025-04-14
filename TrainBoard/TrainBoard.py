@@ -38,7 +38,7 @@ class Graph:
         except: pass
 
     def Add(Self, Value:float, Epoch:int):
-        Self.__Graph__.append((Value, Epoch, time.time()))
+        Self.__Graph__.append((Value, Epoch, time.perf_counter()))
         try:
             with open(Self.__LogFilePath__, "wb") as File:
                 pickle.dump([Self.__Name__, Self.__Graph__], File)
@@ -61,7 +61,9 @@ class Image:
         except: pass
 
     def Add(Self, Image:numpy.ndarray | torch.Tensor, Epoch:int):
-        Self.__Images__.append((Image, Epoch, time.time()))
+        if isinstance(Image, torch.Tensor):
+            Image = Image.cpu().detach()
+        Self.__Images__.append((Image, Epoch, time.perf_counter()))
         try:
             with open(Self.__LogFilePath__, "wb") as File:
                 pickle.dump([Self.__Name__, Self.__Images__], File)
@@ -97,7 +99,7 @@ class Model:
                             "TrainableParameters": Self.TrainableParameters,
                             "NonTrainableParameters": Self.NonTrainableParameters,
                             "ModelSize": Self.ModelSize},
-                          time.time())
+                          time.perf_counter())
         try:
             with open(Self.__LogFilePath__, "wb") as File:
                 pickle.dump([Self.__Name__, Self.__Model__], File)

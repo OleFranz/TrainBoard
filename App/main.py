@@ -159,6 +159,10 @@ while Variables.Break == False:
                     SwapRGBBGR = Variables.Images[ImageName]["SwapRGBBGR"]
                     Data = Variables.Images[ImageName]["Data"]
 
+                    if Variables.SelectedImageEpoch not in (D[1] for D in Data):
+                        Variables.SelectedImageEpoch = max(D[1] for D in Data)
+                        ImageUI.SetInput(f"ImageInput{ImageName}", str(Variables.SelectedImageEpoch))
+
                     ImageUI.Switch(Text="RGB instead of BGR",
                                 X1=5,
                                 Y1=Variables.GraphUIPositionY1 + 10,
@@ -179,7 +183,7 @@ while Variables.Break == False:
                                    ID=f"ImagePrevious{ImageName}",
                                    RoundCorners=10,
                                    OnPress=lambda ImageName=ImageName: {
-                                       setattr(Variables, "SelectedImageEpoch", Variables.SelectedImageEpoch - 1),
+                                       setattr(Variables, "SelectedImageEpoch", next((D[1] for D in reversed(Data) if D[1] < Variables.SelectedImageEpoch), Variables.SelectedImageEpoch)),
                                        ImageUI.SetInput(f"ImageInput{ImageName}", str(Variables.SelectedImageEpoch))
                                    })
 
@@ -191,7 +195,7 @@ while Variables.Break == False:
                                    ID=f"ImageNext{ImageName}",
                                    RoundCorners=10,
                                    OnPress=lambda ImageName=ImageName: {
-                                       setattr(Variables, "SelectedImageEpoch", Variables.SelectedImageEpoch + 1),
+                                       setattr(Variables, "SelectedImageEpoch", next((D[1] for D in Data if D[1] > Variables.SelectedImageEpoch), Variables.SelectedImageEpoch)),
                                        ImageUI.SetInput(f"ImageInput{ImageName}", str(Variables.SelectedImageEpoch))
                                    })
 
@@ -204,21 +208,21 @@ while Variables.Break == False:
                                   Placeholder="Epoch",
                                   TextAlign="Center",
                                   OnChange=lambda Input, ImageName=ImageName: {
-                                      setattr(Variables, "SelectedImageEpoch", int(Input) if Input.isdigit() else Variables.SelectedImageEpoch),
-                                      None if Input.isdigit() else ImageUI.SetInput(f"ImageInput{ImageName}", str(Variables.SelectedImageEpoch)),
-                                      None if Input.isdigit() else ImageUI.Popup(Text="Invalid input",
-                                                                                 StartX1=-100,
-                                                                                 StartY1=Variables.GraphUIPositionY1 + 120,
-                                                                                 StartX2=0,
-                                                                                 StartY2=Variables.GraphUIPositionY1 + 150,
-                                                                                 EndX1=5,
-                                                                                 EndY1=Variables.GraphUIPositionY1 + 120,
-                                                                                 EndX2=Variables.GraphUIPositionX1 - 6,
-                                                                                 EndY2=Variables.GraphUIPositionY1 + 150,
-                                                                                 ID="InvalidInputPopup",
-                                                                                 ShowDuration=3,
-                                                                                 RoundCorners=10,
-                                                                                 TextColor=(50, 50, 255))
+                                      setattr(Variables, "SelectedImageEpoch", (int(Input) if int(Input) in (D[1] for D in Data) else Variables.SelectedImageEpoch) if Input.isdigit() else Variables.SelectedImageEpoch),
+                                      ImageUI.SetInput(f"ImageInput{ImageName}", str(Variables.SelectedImageEpoch)),
+                                      None if Input == str(Variables.SelectedImageEpoch) else ImageUI.Popup(Text="Invalid input",
+                                                                                                            StartX1=-100,
+                                                                                                            StartY1=Variables.GraphUIPositionY1 + 120,
+                                                                                                            StartX2=0,
+                                                                                                            StartY2=Variables.GraphUIPositionY1 + 150,
+                                                                                                            EndX1=5,
+                                                                                                            EndY1=Variables.GraphUIPositionY1 + 120,
+                                                                                                            EndX2=Variables.GraphUIPositionX1 - 6,
+                                                                                                            EndY2=Variables.GraphUIPositionY1 + 150,
+                                                                                                            ID="InvalidInputPopup",
+                                                                                                            ShowDuration=3,
+                                                                                                            RoundCorners=10,
+                                                                                                            TextColor=(50, 50, 255))
                                   })
 
                     ImageUI.Button(Text="Latest",
@@ -235,15 +239,17 @@ while Variables.Break == False:
 
             if list(Variables.Images.keys()) != []:
                 ImageUI.Dropdown(Title=Variables.SelectedImage,
-                                 Items=list(Variables.Images.keys()),
+                                 Items=list(sorted(Variables.Images.keys(), key=lambda ImageName: Variables.Images[ImageName]["Data"][0][2])),
                                  DefaultItem=Variables.SelectedImage,
                                  X1=5,
                                  Y1=Variables.GraphUIPositionY1 + 123,
                                  X2=Variables.GraphUIPositionX1 - 6,
                                  Y2=Variables.GraphUIPositionY1 + 158,
-                                 ID="ImageDropdown",
+                                 ID=f"ImageDropdown{list(Variables.Images.keys())}",
                                  RoundCorners=10,
                                  OnChange=lambda Item: {
+                                     setattr(Variables, "SelectedImageEpoch", max(D[1] for D in Variables.Images[Item]["Data"])) if Item != Variables.SelectedImage else None,
+                                     ImageUI.SetInput(f"ImageInput{Item}", str(Variables.SelectedImageEpoch)),
                                      Settings.Set("Images", Variables.LogPath + ":Selected:", Item),
                                      setattr(Variables, "SelectedImage", Item)
                                  })

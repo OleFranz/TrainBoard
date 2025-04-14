@@ -56,4 +56,4 @@ Graph[:] = (25, 25, 25)
 
 ImageContent = []
 SelectedImage = ""
-SelectedImageEpoch = 0
+SelectedImageEpoch = -1

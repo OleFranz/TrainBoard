@@ -13,12 +13,20 @@ import cv2
 import os
 
 
+LastFiles = []
+
+
 def ClearLogPath():
+    global LastFiles
+    LastFiles = []
     Variables.Graphs = {}
     Variables.Images = {}
     Variables.GraphContent = []
     Variables.GraphPosition = 0, 0
     Variables.GraphZoom = 1
+    Variables.ImageContent = []
+    Variables.SelectedImage = ""
+    Variables.SelectedImageEpoch = -1
     Variables.LogPath = ""
     Settings.Set("Log", "Path", Variables.LogPath)
     ImageUI.SetInput("LogPathInput", Variables.LogPath)
@@ -57,7 +65,7 @@ def SetLogPath(Path:str):
 
 def LogReaderThread():
     try:
-        LastFiles = []
+        global LastFiles
         while Variables.Break == False:
             Start = time.time()
             if Variables.LogPath != "" and os.path.isdir(Variables.LogPath):
@@ -85,6 +93,8 @@ def LogReaderThread():
                     elif FileName.startswith("Images"):
                         AnyImageChanged = True
                         Variables.Images.pop(next(ImageName for ImageName in Variables.Images.keys() if Variables.Images[ImageName]["FileName"] == FileName), None)
+                        Variables.ImageContent.pop(Variables.ImageContent.index(next((ImageData for ImageData in Variables.ImageContent if ImageData[0] not in list(Variables.Images.keys())), None)))
+                        Variables.SelectedImage = ""
                     elif FileName.startswith("Model"):
                         AnyModelChanged = True
                         Variables.Models.pop(next(ModelName for ModelName in Variables.Models.keys() if Variables.Models[ModelName]["FileName"] == FileName), None)
@@ -120,7 +130,16 @@ def LogReaderThread():
                 if AnyImageChanged:
                     if Variables.SelectedImage == "":
                         Name = Settings.Get("Images", Variables.LogPath + ":Selected:", "")
-                        Variables.SelectedImage = Name if Name in Variables.Images else next(iter(Variables.Images))
+                        BeforeSelectedImage = Variables.SelectedImage
+                        Variables.SelectedImage = (Name if Name in Variables.Images else next(iter(Variables.Images))) if Variables.Images else ""
+                        if Variables.SelectedImage != BeforeSelectedImage:
+                            Settings.Set("Images", Variables.LogPath + ":Selected:", Variables.SelectedImage)
+                            ImageUI.SetDropdown(f"ImageDropdown{list(Variables.Images.keys())}",
+                                                list(sorted(Variables.Images.keys(), key=lambda ImageName: Variables.Images[ImageName]["Data"][0][2])),
+                                                Variables.SelectedImage)
+                    if Variables.SelectedImageEpoch == -1:
+                        Variables.SelectedImageEpoch = max(D[1] for D in Variables.Images[Variables.SelectedImage]["Data"])
+                        ImageUI.SetInput(f"ImageInput{Variables.SelectedImage}", str(Variables.SelectedImageEpoch))
                     Images = []
                     for ImageName in Variables.Images:
                         Image = Variables.Images[ImageName]
@@ -139,18 +158,20 @@ def LogReaderThread():
                                 if Img.shape[2] == 1:
                                     Img = cv2.cvtColor(Img, cv2.COLOR_GRAY2BGR)
                             elif Img.dtype != torch.float32:
-                                Img = Img.cpu().to(torch.float32).numpy().transpose(1, 2, 0)
+                                Img = Img.to(torch.float32).numpy().transpose(1, 2, 0)
                                 Img = numpy.clip(Img, 0, 1)
                                 Img = (Img * 255).astype(numpy.uint8)
                             elif Img.dtype == torch.float32:
-                                Img = Img.cpu().numpy().transpose(1, 2, 0)
+                                Img = Img.numpy().transpose(1, 2, 0)
                                 Img = numpy.clip(Img, 0, 1)
                                 Img = (Img * 255).astype(numpy.uint8)
-                                print(Img.dtype)
                             ImageTemp.append((Img, Epoch, Time))
                         Image["Data"] = ImageTemp.copy()
                         ImageData = [(Image["Data"][i][0], Image["Data"][i][1]) for i in range(len(Image["Data"]))]
                         Images.append((ImageName, ImageData))
+                    if Variables.ImageContent == [] or Variables.ImageContent[-1][1][-1][1] == Variables.SelectedImageEpoch:
+                        Variables.SelectedImageEpoch = Images[-1][1][-1][1]
+                        ImageUI.SetInput(f"ImageInput{Variables.SelectedImage}", str(Variables.SelectedImageEpoch))
                     Variables.ImageContent = Images
 
                 LastFiles = Files

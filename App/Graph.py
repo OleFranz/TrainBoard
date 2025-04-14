@@ -62,7 +62,15 @@ def Update():
 
             if Variables.Tab != "Graphs":
                 LastContent = Content
+                ImageUI.Image(Image=Frame,
+                              X1=Variables.GraphUIPositionX1,
+                              Y1=Variables.GraphUIPositionY1,
+                              X2=Variables.GraphUIPositionX2,
+                              Y2=Variables.GraphUIPositionY2,
+                              ID="GraphImage",
+                              RoundCorners=20)
                 return
+
 
             MinX = min([Graph[2][X][0] if Variables.Graphs[Graph[0]]["Show"] else 0 for Graph in Variables.GraphContent for X in range(len(Graph[2]))]) if len(Variables.GraphContent) > 0 else 0
             MaxX = max([Graph[2][X][0] if Variables.Graphs[Graph[0]]["Show"] else 0 for Graph in Variables.GraphContent for X in range(len(Graph[2]))]) if len(Variables.GraphContent) > 0 else 0
@@ -128,13 +136,14 @@ def Update():
                             cv2.line(Frame, LastPoint, (X, Y), Graph[1], 1, cv2.LINE_AA)
                         LastPoint = (X, Y)
 
+
             ImageUI.Image(Image=Frame,
-                          X1=Variables.GraphUIPositionX1,
-                          Y1=Variables.GraphUIPositionY1,
-                          X2=Variables.GraphUIPositionX2,
-                          Y2=Variables.GraphUIPositionY2,
-                          ID="GraphImage",
-                          RoundCorners=20)
+                        X1=Variables.GraphUIPositionX1,
+                        Y1=Variables.GraphUIPositionY1,
+                        X2=Variables.GraphUIPositionX2,
+                        Y2=Variables.GraphUIPositionY2,
+                        ID="GraphImage",
+                        RoundCorners=20)
 
             LastContent = Content
 
