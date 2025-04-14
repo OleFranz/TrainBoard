@@ -129,7 +129,7 @@ def Update():
                 if Variables.Graphs[Graph[0]]["Show"]:
                     LastPoint = None
                     for X in range(len(Graph[2])):
-                        X, Y = ConvertToImageCoordinate((Graph[2][X][0] - MinX) / (XAxisMax - MinX) if XAxisMax - MinX != 0 else 0, 1 - Graph[2][X][1] / MaxY)
+                        X, Y = ConvertToImageCoordinate((Graph[2][X][0] - MinX) / (XAxisMax - MinX) if XAxisMax - MinX != 0 else 0, (MaxY - Graph[2][X][1]) / (MaxY - MinY) if MaxY - MinY != 0 else 0)
                         if len(Graph[2]) == 1:
                             cv2.circle(Frame, (X, Y), 1, Graph[1], 2, cv2.LINE_AA)
                         elif LastPoint != None:
