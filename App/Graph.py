@@ -72,10 +72,13 @@ def Update():
                 return
 
 
-            MinX = min([Graph[2][X][0] if Variables.Graphs[Graph[0]]["Show"] else 0 for Graph in Variables.GraphContent for X in range(len(Graph[2]))]) if len(Variables.GraphContent) > 0 else 0
-            MaxX = max([Graph[2][X][0] if Variables.Graphs[Graph[0]]["Show"] else 0 for Graph in Variables.GraphContent for X in range(len(Graph[2]))]) if len(Variables.GraphContent) > 0 else 0
-            MinY = min([Graph[2][X][1] if Variables.Graphs[Graph[0]]["Show"] else 0 for Graph in Variables.GraphContent for X in range(len(Graph[2]))]) if len(Variables.GraphContent) > 0 else 0
-            MaxY = max([Graph[2][X][1] if Variables.Graphs[Graph[0]]["Show"] else 0 for Graph in Variables.GraphContent for X in range(len(Graph[2]))]) if len(Variables.GraphContent) > 0 else 0
+            XValues = [Graph[2][X][0] for Graph in Variables.GraphContent for X in range(len(Graph[2])) if Variables.Graphs[Graph[0]]["Show"]]
+            YValues = [Graph[2][X][1] for Graph in Variables.GraphContent for X in range(len(Graph[2])) if Variables.Graphs[Graph[0]]["Show"]]
+
+            MinX = min(XValues) if len(XValues) > 0 else 0
+            MaxX = max(XValues) if len(XValues) > 0 else 0
+            MinY = min(YValues) if len(YValues) > 0 else 0
+            MaxY = max(YValues) if len(YValues) > 0 else 0
 
             MinY = MinY - (MaxY - MinY) * 0.1
             MaxY = MaxY + (MaxY - MinY) * 0.1

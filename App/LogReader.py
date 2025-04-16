@@ -73,7 +73,10 @@ def LogReaderThread():
 
                 for FileName in os.listdir(Variables.LogPath):
                     if FileName.endswith(".pkl"):
-                        Files.append((FileName, hashlib.md5(open(os.path.join(Variables.LogPath, FileName), "rb").read()).hexdigest()))
+                        try:
+                            Files.append((FileName, hashlib.md5(open(os.path.join(Variables.LogPath, FileName), "rb").read()).hexdigest()))
+                        except:
+                            CrashReport("LogReader - Error while reading log hashes", traceback.format_exc())
 
                 FilesSet = set(File[0] for File in Files)
                 LastFilesSet = set(File[0] for File in LastFiles)
@@ -87,17 +90,20 @@ def LogReaderThread():
                 AnyModelChanged = False
 
                 for FileName in RemovedFiles:
-                    if FileName.startswith("Graph"):
-                        AnyGraphChanged = True
-                        Variables.Graphs.pop(next(GraphName for GraphName in Variables.Graphs.keys() if Variables.Graphs[GraphName]["FileName"] == FileName), None)
-                    elif FileName.startswith("Images"):
-                        AnyImageChanged = True
-                        Variables.Images.pop(next(ImageName for ImageName in Variables.Images.keys() if Variables.Images[ImageName]["FileName"] == FileName), None)
-                        Variables.ImageContent.pop(Variables.ImageContent.index(next((ImageData for ImageData in Variables.ImageContent if ImageData[0] not in list(Variables.Images.keys())), None)))
-                        Variables.SelectedImage = ""
-                    elif FileName.startswith("Model"):
-                        AnyModelChanged = True
-                        Variables.Models.pop(next(ModelName for ModelName in Variables.Models.keys() if Variables.Models[ModelName]["FileName"] == FileName), None)
+                    try:
+                        if FileName.startswith("Graph"):
+                            AnyGraphChanged = True
+                            Variables.Graphs.pop(next(GraphName for GraphName in Variables.Graphs.keys() if Variables.Graphs[GraphName]["FileName"] == FileName), None)
+                        elif FileName.startswith("Images"):
+                            AnyImageChanged = True
+                            Variables.Images.pop(next(ImageName for ImageName in Variables.Images.keys() if Variables.Images[ImageName]["FileName"] == FileName), None)
+                            Variables.ImageContent.pop(Variables.ImageContent.index(next((ImageData for ImageData in Variables.ImageContent if ImageData[0] not in list(Variables.Images.keys())), None)))
+                            Variables.SelectedImage = ""
+                        elif FileName.startswith("Model"):
+                            AnyModelChanged = True
+                            Variables.Models.pop(next(ModelName for ModelName in Variables.Models.keys() if Variables.Models[ModelName]["FileName"] == FileName), None)
+                    except:
+                        CrashReport("LogReader - Error while removing items", traceback.format_exc())
 
                 for FileName in NewFiles | ChangedFiles:
                     try:
@@ -117,62 +123,76 @@ def LogReaderThread():
                                 Variables.Models[Data[0]] = {"FileName": FileName, "Data": Data[1]}
                                 Variables.Models = {K: V for K, V in sorted(Variables.Models.items(), key=lambda Item: Item[1]["Data"][1])}
                     except:
-                        CrashReport("LogReader - Error while loading log file", traceback.format_exc())
+                        CrashReport("LogReader - Error while loading log files", traceback.format_exc())
 
                 if AnyGraphChanged:
-                    Graphs = []
-                    for i, GraphName in enumerate(Variables.Graphs):
-                        Graph = Variables.Graphs[GraphName]
-                        GraphData = [(Graph["Data"][i][1], Graph["Data"][i][0]) for i in range(len(Graph["Data"]))]
-                        Graphs.append((GraphName, Variables.GraphColors[i % len(Variables.GraphColors)], GraphData))
-                    Variables.GraphContent = Graphs.copy()
+                    try:
+                        Graphs = []
+                        for i, GraphName in enumerate(Variables.Graphs):
+                            Graph = Variables.Graphs[GraphName]
+                            GraphData = [(Graph["Data"][i][1], Graph["Data"][i][0]) for i in range(len(Graph["Data"]))]
+                            Graphs.append((GraphName, Variables.GraphColors[i % len(Variables.GraphColors)], GraphData))
+                        Variables.GraphContent = Graphs.copy()
+                    except:
+                        CrashReport("LogReader - Error while loading graphs", traceback.format_exc())
 
                 if AnyImageChanged:
-                    if Variables.SelectedImage == "":
-                        Name = Settings.Get("Images", Variables.LogPath + ":Selected:", "")
-                        BeforeSelectedImage = Variables.SelectedImage
-                        Variables.SelectedImage = (Name if Name in Variables.Images else next(iter(Variables.Images))) if Variables.Images else ""
-                        if Variables.SelectedImage != BeforeSelectedImage:
-                            Settings.Set("Images", Variables.LogPath + ":Selected:", Variables.SelectedImage)
-                            ImageUI.SetDropdown(f"ImageDropdown{list(Variables.Images.keys())}",
-                                                list(sorted(Variables.Images.keys(), key=lambda ImageName: Variables.Images[ImageName]["Data"][0][2])),
-                                                Variables.SelectedImage)
-                    if Variables.SelectedImageEpoch == -1:
-                        Variables.SelectedImageEpoch = max(D[1] for D in Variables.Images[Variables.SelectedImage]["Data"])
-                        ImageUI.SetInput(f"ImageInput{Variables.SelectedImage}", str(Variables.SelectedImageEpoch))
-                    Images = []
-                    for ImageName in Variables.Images:
-                        Image = Variables.Images[ImageName]
-                        SwapRGBBGR = Image["SwapRGBBGR"]
-                        ImageTemp = []
-                        for i, (Img, Epoch, Time) in enumerate(Image["Data"]):
-                            if Img.dtype == numpy.uint8:
-                                if Img.shape[2] == 1:
-                                    Img = cv2.cvtColor(Img, cv2.COLOR_GRAY2BGR)
-                            elif Img.dtype == numpy.float32:
-                                Img = (Img * 255).astype(numpy.uint8)
-                                if Img.shape[2] == 1:
-                                    Img = cv2.cvtColor(Img, cv2.COLOR_GRAY2BGR)
-                            elif Img.dtype == numpy.float64:
-                                Img = (Img * 255).astype(numpy.uint8)
-                                if Img.shape[2] == 1:
-                                    Img = cv2.cvtColor(Img, cv2.COLOR_GRAY2BGR)
-                            elif Img.dtype != torch.float32:
-                                Img = Img.to(torch.float32).numpy().transpose(1, 2, 0)
-                                Img = numpy.clip(Img, 0, 1)
-                                Img = (Img * 255).astype(numpy.uint8)
-                            elif Img.dtype == torch.float32:
-                                Img = Img.numpy().transpose(1, 2, 0)
-                                Img = numpy.clip(Img, 0, 1)
-                                Img = (Img * 255).astype(numpy.uint8)
-                            ImageTemp.append((Img, Epoch, Time))
-                        Image["Data"] = ImageTemp.copy()
-                        ImageData = [(Image["Data"][i][0], Image["Data"][i][1]) for i in range(len(Image["Data"]))]
-                        Images.append((ImageName, ImageData))
-                    if Variables.ImageContent == [] or Variables.ImageContent[-1][1][-1][1] == Variables.SelectedImageEpoch:
-                        Variables.SelectedImageEpoch = Images[-1][1][-1][1]
-                        ImageUI.SetInput(f"ImageInput{Variables.SelectedImage}", str(Variables.SelectedImageEpoch))
-                    Variables.ImageContent = Images
+                    try:
+                        if Variables.SelectedImage == "":
+                            Name = Settings.Get("Images", Variables.LogPath + ":Selected:", "")
+                            BeforeSelectedImage = Variables.SelectedImage
+                            Variables.SelectedImage = (Name if Name in Variables.Images else next(iter(Variables.Images))) if Variables.Images else ""
+                            if Variables.SelectedImage != BeforeSelectedImage:
+                                Settings.Set("Images", Variables.LogPath + ":Selected:", Variables.SelectedImage)
+                                ImageUI.SetDropdown(f"ImageDropdown{list(Variables.Images.keys())}",
+                                                    list(sorted(Variables.Images.keys(), key=lambda ImageName: Variables.Images[ImageName]["Data"][0][2])),
+                                                    Variables.SelectedImage)
+                        if Variables.SelectedImageEpoch == -1:
+                            Variables.SelectedImageEpoch = max(D[1] for D in Variables.Images[Variables.SelectedImage]["Data"])
+                            ImageUI.SetInput(f"ImageInput{Variables.SelectedImage}", str(Variables.SelectedImageEpoch))
+                        Images = []
+                        for ImageName in Variables.Images:
+                            Image = Variables.Images[ImageName]
+                            SwapRGBBGR = Image["SwapRGBBGR"]
+                            ImageTemp = []
+                            for i, (Img, Epoch, Time) in enumerate(Image["Data"]):
+                                if Img.dtype == numpy.uint8:
+                                    if Img.shape[2] == 1:
+                                        Img = cv2.cvtColor(Img, cv2.COLOR_GRAY2BGR)
+                                elif Img.dtype == numpy.float32:
+                                    Img = (Img * 255).astype(numpy.uint8)
+                                    if Img.shape[2] == 1:
+                                        Img = cv2.cvtColor(Img, cv2.COLOR_GRAY2BGR)
+                                elif Img.dtype == numpy.float64:
+                                    Img = (Img * 255).astype(numpy.uint8)
+                                    if Img.shape[2] == 1:
+                                        Img = cv2.cvtColor(Img, cv2.COLOR_GRAY2BGR)
+                                elif Img.dtype != torch.float32:
+                                    if len(Img.shape) == 4:
+                                        Img = Img[0]
+                                    Img = Img.to(torch.float32).numpy().transpose(1, 2, 0)
+                                    Img = numpy.clip(Img, 0, 1)
+                                    Img = (Img * 255).astype(numpy.uint8)
+                                    if Img.shape[2] == 1:
+                                        Img = cv2.cvtColor(Img, cv2.COLOR_GRAY2BGR)
+                                elif Img.dtype == torch.float32:
+                                    if len(Img.shape) == 4:
+                                        Img = Img[0]
+                                    Img = Img.numpy().transpose(1, 2, 0)
+                                    Img = numpy.clip(Img, 0, 1)
+                                    Img = (Img * 255).astype(numpy.uint8)
+                                    if Img.shape[2] == 1:
+                                        Img = cv2.cvtColor(Img, cv2.COLOR_GRAY2BGR)
+                                ImageTemp.append((Img, Epoch, Time))
+                            Image["Data"] = ImageTemp.copy()
+                            ImageData = [(Image["Data"][i][0], Image["Data"][i][1]) for i in range(len(Image["Data"]))]
+                            Images.append((ImageName, ImageData))
+                        if Variables.ImageContent == [] or Variables.ImageContent[-1][1][-1][1] == Variables.SelectedImageEpoch:
+                            Variables.SelectedImageEpoch = Images[-1][1][-1][1]
+                            ImageUI.SetInput(f"ImageInput{Variables.SelectedImage}", str(Variables.SelectedImageEpoch))
+                        Variables.ImageContent = Images
+                    except:
+                        CrashReport("LogReader - Error while loading images", traceback.format_exc())
 
                 LastFiles = Files
 
