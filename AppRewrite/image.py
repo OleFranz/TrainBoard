@@ -20,12 +20,14 @@ def update():
             return
 
         if len(images) > 0:
-            if selected_image == "":
+            if selected_image == "" or selected_image_epoch not in list(images[selected_image]["data"].keys()):
                 selected_image = settings.get("image", variables.log_path + ":selected:", "")
                 if selected_image not in images.keys():
                     selected_image = list(images.keys())[0]
                     settings.set("image", variables.log_path + ":selected:", selected_image)
                 selected_image_epoch = max(list(images[selected_image]["data"].keys()))
+                ImageUI.SetDropdown(f"image_dropdown_{list(images.keys())}", list(images.keys()), selected_image)
+                ImageUI.SetInput("image_input", str(selected_image_epoch))
 
             ImageUI.Dropdown(Title=selected_image,
                              Items=list(images.keys()),

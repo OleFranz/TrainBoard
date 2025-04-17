@@ -218,4 +218,5 @@ def sync_data():
     graph.graphs = unsync_graphs
     image.images = unsync_images
     model.models = unsync_models
-    image.selected_image = unsync_selected_image
+    if unsync_selected_image == "":
+        image.selected_image = unsync_selected_image

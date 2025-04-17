@@ -46,7 +46,7 @@ class Create:
         """
         epoch_name = f"{name}#{epoch}"
         if epoch_name not in self._graphs:
-            self._graphs[epoch_name] = os.path.join(self._log_path, f"graph{len(self._graphs)}.pkl")
+            self._graphs[epoch_name] = os.path.join(self._log_path, f"graph-{len(self._graphs)}-{time.perf_counter()}.pkl")
 
         with open(self._graphs[epoch_name], "wb") as file:
             pickle.dump({"name": name,
@@ -74,7 +74,7 @@ class Create:
         None"""
         epoch_name = f"{name}#{epoch}"
         if epoch_name not in self._images:
-            self._images[epoch_name] = os.path.join(self._log_path, f"image{len(self._images)}.pkl")
+            self._images[epoch_name] = os.path.join(self._log_path, f"image-{len(self._images)}-{time.perf_counter()}.pkl")
 
         if isinstance(image, numpy.ndarray) and image.dtype == numpy.uint8:
             if image.shape[2] == 1: image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
@@ -126,7 +126,7 @@ class Create:
             A dictionary containing the total parameters, trainable parameters, non trainable parameters and model size in MB
         """
         if name not in self._models:
-            self._models[name] = os.path.join(self._log_path, f"model{len(self._models)}.pkl")
+            self._models[name] = os.path.join(self._log_path, f"model-{len(self._models)}-{time.perf_counter()}.pkl")
 
         total_parameters = 0
         for parameter in model.parameters():
