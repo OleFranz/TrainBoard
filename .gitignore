@@ -6,3 +6,6 @@
 
 # Ignore the settings file
 App/Settings.json
+
+# Ignore the settings file
+AppRewrite/settings.json

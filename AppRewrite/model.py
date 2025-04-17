@@ -4,25 +4,27 @@ import variables
 import ImageUI
 
 
-def Update():
+models = {}
+
+
+def update():
     try:
 
         if variables.tab != "Models":
             return
-        return
-        for i, ModelName in enumerate(Variables.Models):
-            ModelData = Variables.Models[ModelName]["Data"][0]
-            TotalParameters = ModelData["TotalParameters"]
-            TrainableParameters = ModelData["TrainableParameters"]
-            NonTrainableParameters = ModelData["NonTrainableParameters"]
-            ModelSize = ModelData["ModelSize"]
 
-            ImageUI.Label(Text=f"{ModelName}\n> Total Parameters: {TotalParameters:,}\n> Trainable Parameters: {TrainableParameters:,}\n> Non-Trainable Parameters: {NonTrainableParameters:,}\n> Model Size: {f'{round(ModelSize, 2):,}'}MB".replace(",", "#").replace(".", ",").replace("#", "."),
-                          X1=Variables.GraphUIPositionX1 + 10,
-                          Y1=Variables.GraphUIPositionY1 + 10 + 100 * i,
-                          X2=Variables.GraphUIPositionX2 - 10,
-                          Y2=Variables.GraphUIPositionY1 + 10 + 100 * (i + 1),
-                          ID=f"ModelLabel{ModelName}",
+        for i, model_name in enumerate(models):
+            total_parameters = models[model_name]["total_parameters"]
+            trainable_parameters = models[model_name]["trainable_parameters"]
+            non_trainable_parameters = models[model_name]["non_trainable_parameters"]
+            model_size = models[model_name]["model_size"]
+
+            ImageUI.Label(Text=f"{model_name}\n> Total Parameters: {total_parameters:,}\n> Trainable Parameters: {trainable_parameters:,}\n> Non-Trainable Parameters: {non_trainable_parameters:,}\n> Model Size: {f'{round(model_size, 2):,}'}MB".replace(",", "#").replace(".", ",").replace("#", "."),
+                          X1=variables.graph_ui_position_x1,
+                          Y1=variables.graph_ui_position_y1 + 100 * i,
+                          X2=variables.graph_ui_position_x2 - 10,
+                          Y2=variables.graph_ui_position_y1 + 100 * (i + 1),
+                          ID=f"model_label_{model_name}",
                           Align="Left",
                           FontSize=15)
 

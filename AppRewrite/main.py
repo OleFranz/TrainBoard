@@ -61,9 +61,11 @@ while variables.stop == False:
     Bottom = variables.background.shape[0] - 1
 
     if variables.log_path != "":
+        logreader.sync_data()
+
         graph.update()
     #    Image.Update()
-    #    Model.Update()
+        model.update()
 
         ImageUI.Label(Text="TrainBoard",
                       X1=0,
@@ -80,7 +82,7 @@ while variables.stop == False:
                        Y1=5,
                        X2=variables.graph_ui_position_x1 + (variables.graph_ui_position_x2 - variables.graph_ui_position_x1) / 3 - 2.5,
                        Y2=variables.graph_ui_position_y1 - 5,
-                       ID="GraphsTab",
+                       ID="graphs_tab",
                        RoundCorners=10,
                        Color=(30, 125, 255) if variables.tab == "Graphs" else ImageUI.Colors.ButtonColor,
                        HoverColor=(35, 130, 255) if variables.tab == "Graphs" else ImageUI.Colors.ButtonHoverColor,
@@ -92,7 +94,7 @@ while variables.stop == False:
                        Y1=5,
                        X2=variables.graph_ui_position_x1 + (variables.graph_ui_position_x2 - variables.graph_ui_position_x1) / 1.5 - 2.5,
                        Y2=variables.graph_ui_position_y1 - 5,
-                       ID="ImagesTab",
+                       ID="images_tab",
                        RoundCorners=10,
                        Color=(30, 125, 255) if variables.tab == "Images" else ImageUI.Colors.ButtonColor,
                        HoverColor=(35, 130, 255) if variables.tab == "Images" else ImageUI.Colors.ButtonHoverColor,
@@ -104,53 +106,13 @@ while variables.stop == False:
                        Y1=5,
                        X2=variables.graph_ui_position_x2,
                        Y2=variables.graph_ui_position_y1 - 5,
-                       ID="ModelsTab",
+                       ID="models_tab",
                        RoundCorners=10,
                        Color=(30, 125, 255) if variables.tab == "Models" else ImageUI.Colors.ButtonColor,
                        HoverColor=(35, 130, 255) if variables.tab == "Models" else ImageUI.Colors.ButtonHoverColor,
                        TextColor=(0, 0, 0) if variables.tab == "Models" else (255, 255, 255),
                        OnPress=lambda: {settings.set("ui", "tab", "Models"), setattr(variables, "tab", "Models")})
 
-    #    if variables.tab == "Graphs":
-    #        for i, GraphName in enumerate(Variables.Graphs):
-    #            FileName = Variables.Graphs[GraphName]["FileName"]
-    #            ShowState = Variables.Graphs[GraphName]["Show"]
-    #            Data = Variables.Graphs[GraphName]["Data"]
-    #            ImageUI.Switch(Text=GraphName,
-    #                        X1=5,
-    #                        Y1=variables.graph_ui_position_y1 + 10 + 30 * i,
-    #                        X2=variables.graph_ui_position_x1 - 26,
-    #                        Y2=variables.graph_ui_position_y1 + 35 + 30 * i,
-    #                        ID=f"GraphSwitch{GraphName}",
-    #                        State=ShowState,
-    #                        OnChange=lambda State, GraphName=GraphName: {
-    #                            settings.set("Graphs", Variables.LogPath + ":Show:" + GraphName, State),
-    #                            getattr(Variables, "Graphs").__setitem__(GraphName, {"FileName": FileName, "Show": State, "Data": Data})
-    #                        })
-#
-    #            ColorImage = numpy.zeros((15, 15, 3), numpy.uint8)
-    #            ColorsFound = [Graph[1] for Graph in Variables.GraphContent if Graph[0] == GraphName]
-    #            ColorImage[:] = ColorsFound[0] if len(ColorsFound) > 0 else (28, 28, 28)
-    #            ImageUI.Image(Image=ColorImage,
-    #                          X1=variables.graph_ui_position_x1 - 21,
-    #                          Y1=variables.graph_ui_position_y1 + 15 + 30 * i,
-    #                          X2=variables.graph_ui_position_x1 - 6,
-    #                          Y2=variables.graph_ui_position_y1 + 30 + 30 * i,
-    #                          ID=f"GraphColor{GraphName}",
-    #                          RoundCorners=12)
-#
-    #        ImageUI.Button(Text="Center the graph",
-    #                       X1=5,
-    #                       Y1=variables.graph_ui_position_y2 - 85,
-    #                       X2=variables.graph_ui_position_x1 - 5,
-    #                       Y2=variables.graph_ui_position_y2 - 45,
-    #                       ID="CenterGraphButton",
-    #                       RoundCorners=10,
-    #                       OnPress=lambda: {
-    #                           setattr(Variables, "GraphPosition", (0, 0)),
-    #                           setattr(Variables, "GraphZoom", 1)
-    #                       })
-#
     #    elif variables.tab == "Images":
     #        for i, ImageName in enumerate(Variables.Images):
     #            if Variables.SelectedImage == ImageName:

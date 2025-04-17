@@ -27,10 +27,6 @@ window_height = settings.get("ui", "height", 540)
 background = numpy.zeros((window_height, window_width, 3), dtype=numpy.uint8)
 background[:] = (28, 28, 28)
 
-graphs = {}
-images = {}
-models = {}
-
 graph_ui_position_x1 = 200
 graph_ui_position_y1 = 50
 graph_ui_position_x2 = window_width - 6

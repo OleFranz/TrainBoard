@@ -3,6 +3,7 @@ import SimpleWindow
 import threading
 import traceback
 import variables
+import settings
 import ImageUI
 import ctypes
 import pynput
@@ -20,6 +21,7 @@ background[:] = (25, 25, 25)
 
 graph_zoom = 1
 graph_position = 0, 0
+graphs = {}
 
 graph_colors = [
     (203, 181, 18),
@@ -143,10 +145,49 @@ def update():
         global last_content
         global frame
         global background
+        import sys
+        if variables.tab == "Graphs":
+            for i, graph_name in enumerate(graphs):
+                show_state = graphs[graph_name]["show"]
+                color = graphs[graph_name]["color"]
+                ImageUI.Switch(Text=graph_name,
+                            X1=5,
+                            Y1=variables.graph_ui_position_y1 + 10 + 30 * i,
+                            X2=variables.graph_ui_position_x1 - 26,
+                            Y2=variables.graph_ui_position_y1 + 35 + 30 * i,
+                            ID=f"graph_switch_{graph_name}",
+                            State=show_state,
+                            OnChange=lambda state, graph_name=graph_name, color=color: {
+                                settings.set("graph", f"{variables.log_path}:{graph_name}:show", state),
+                                getattr(__import__(__name__), "graphs").__setitem__(graph_name, {"data": graphs[graph_name]["data"], "color": color, "show": state})
+                            })
+
+                color_image = numpy.zeros((15, 15, 3), numpy.uint8)
+                color_image[:] = color
+                ImageUI.Image(Image=color_image,
+                              X1=variables.graph_ui_position_x1 - 21,
+                              Y1=variables.graph_ui_position_y1 + 15 + 30 * i,
+                              X2=variables.graph_ui_position_x1 - 6,
+                              Y2=variables.graph_ui_position_y1 + 30 + 30 * i,
+                              ID=f"graph_color_{graph_name}",
+                              RoundCorners=12)
+
+            if graph_position != (0, 0) or graph_zoom != 1:
+                ImageUI.Button(Text="Center the graph",
+                               X1=5,
+                               Y1=variables.graph_ui_position_y2 - 85,
+                               X2=variables.graph_ui_position_x1 - 5,
+                               Y2=variables.graph_ui_position_y2 - 45,
+                               ID="CenterGraphButton",
+                               RoundCorners=10,
+                               OnPress=lambda: {
+                                   setattr(__import__(__name__), "graph_position", (0, 0)),
+                                   setattr(__import__(__name__), "graph_zoom", 1)
+                               })
 
         content = (graph_position,
                    graph_zoom,
-                   [graph.values() for graph in variables.graphs.values()],
+                   [graph.values() for graph in graphs.values()],
                    variables.window_width,
                    variables.window_height,
                    variables.tab)
@@ -161,101 +202,87 @@ def update():
 
             if variables.tab != "Graphs":
                 last_content = content
-                ImageUI.Image(Image=frame,
-                              X1=variables.graph_ui_position_x1,
-                              Y1=variables.graph_ui_position_y1,
-                              X2=variables.graph_ui_position_x2,
-                              Y2=variables.graph_ui_position_y2,
-                              ID="GraphImage",
-                              RoundCorners=20)
                 return
 
-            x_values = [key for graph in variables.graphs.values() for key in graph.keys()]
-            y_values = [value for graph in variables.graphs.values() for value in graph.values()]
+            # get all the x and y values of the shown graphs
+            x_values = [epoch for name, data in graphs.items() if graphs[name]["show"] for epoch, (_, _) in data["data"].items()]
+            y_values = [value for name, data in graphs.items() if graphs[name]["show"] for _, (value, _) in data["data"].items()]
 
-            MinX = min(x_values) if len(x_values) > 0 else 0
-            MaxX = max(x_values) if len(x_values) > 0 else 0
-            MinY = min(y_values) if len(y_values) > 0 else 0
-            MaxY = max(y_values) if len(y_values) > 0 else 0
+            min_x = min(x_values) if len(x_values) > 0 else 0
+            max_x = max(x_values) if len(x_values) > 0 else 0
+            min_y = min(y_values) if len(y_values) > 0 else 0
+            max_y = max(y_values) if len(y_values) > 0 else 0
 
-            MinY = MinY - (MaxY - MinY) * 0.1
-            MaxY = MaxY + (MaxY - MinY) * 0.1
+            min_y = min_y - (max_y - min_y) * 0.1
+            max_y = max_y + (max_y - min_y) * 0.1
 
-            MinY = 0 if MinY < 0 else MinY
-            MaxX += 1 if MaxX == MinX else 0
+            min_y = 0 if min_y < 0 else min_y
+            max_x += 1 if max_x == min_x else 0
 
-            XAxisScale = max(1, min(5, MaxX - 1))
-            XAxisMax = MinX + ((MaxX + XAxisScale - 2) // XAxisScale) * XAxisScale
-            YAxisScale = max(5, round(graph_zoom * 5))
+            x_axis_scale = max(1, min(5, max_x - 1))
+            x_axis_max = min_x + ((max_x + x_axis_scale - 2) // x_axis_scale) * x_axis_scale
+            y_axis_scale = max(5, round(graph_zoom * 5))
 
-            for i in range(XAxisScale + 1):
-                FloatX = i / XAxisScale
-                X, Y = convert_to_frame_coordinate(FloatX, 1)
-                if -10 <= X <= background.shape[1] + 9:
-                    cv2.line(frame, convert_to_frame_coordinate(FloatX, 0), convert_to_frame_coordinate(FloatX, 1), (180, 180, 180) if FloatX == 0 else (50, 50, 50), 1)
-                    cv2.line(frame, (X, Y - 3), (X, Y + 3), (180, 180, 180), 1)
-                    Text, Fontscale, Thickness, Width, Height = get_text_size(f"{int(MinX + (XAxisMax - MinX) * FloatX):,}".replace(",", "."), 10)
-                    Y = round(Y + Height * 1.5)
-                    if Y >= background.shape[0] - 2:
-                        Y = background.shape[0] - 2
+            for i in range(x_axis_scale + 1):
+                float_x = i / x_axis_scale
+                x, y = convert_to_frame_coordinate(float_x, 1)
+                if -10 <= x <= background.shape[1] + 9:
+                    cv2.line(frame, convert_to_frame_coordinate(float_x, 0), convert_to_frame_coordinate(float_x, 1), (180, 180, 180) if float_x == 0 else (50, 50, 50), 1)
+                    cv2.line(frame, (x, y - 3), (x, y + 3), (180, 180, 180), 1)
+                    text, font_scale, thickness, width, height = get_text_size(f"{int(min_x + (x_axis_max - min_x) * float_x):,}".replace(",", "."), 10)
+                    y = round(y + height * 1.5)
+                    if y >= background.shape[0] - 2:
+                        y = background.shape[0] - 2
                     cv2.putText(frame,
-                                Text,
-                                (round(X - Width / 2), Y),
+                                text,
+                                (round(x - width / 2), y),
                                 cv2.FONT_HERSHEY_SIMPLEX,
-                                Fontscale,
+                                font_scale,
                                 (180, 180, 180),
-                                Thickness,
+                                thickness,
                                 cv2.LINE_AA)
 
-            for i in range(YAxisScale + 1):
-                FloatY = 1 - i / YAxisScale
-                X, Y = convert_to_frame_coordinate(0, FloatY)
-                if -10 <= Y <= background.shape[0] + 9:
-                    cv2.line(frame, convert_to_frame_coordinate(0, FloatY), convert_to_frame_coordinate(1, FloatY), (180, 180, 180) if FloatY == 1 else (50, 50, 50), 1)
-                    cv2.line(frame, (X - 3, Y), (X + 3, Y), (180, 180, 180), 1)
-                    Text, Fontscale, Thickness, Width, Height = get_text_size(f"{round(MaxY - (MaxY - MinY) * FloatY, max(2, min(9, round(3 * (graph_zoom / 100) * 100)))):,}".replace(",", "#").replace(".", ",").replace("#", "."), 10)
-                    X = round(X - Width * 1.1)
-                    if X < 1:
-                        X = 1
+            for i in range(y_axis_scale + 1):
+                float_y = 1 - i / y_axis_scale
+                x, y = convert_to_frame_coordinate(0, float_y)
+                if -10 <= y <= background.shape[0] + 9:
+                    cv2.line(frame, convert_to_frame_coordinate(0, float_y), convert_to_frame_coordinate(1, float_y), (180, 180, 180) if float_y == 1 else (50, 50, 50), 1)
+                    cv2.line(frame, (x - 3, y), (x + 3, y), (180, 180, 180), 1)
+                    text, font_scale, thickness, width, height = get_text_size(f"{round(max_y - (max_y - min_y) * float_y, max(2, min(9, round(3 * (graph_zoom / 100) * 100)))):,}".replace(",", "#").replace(".", ",").replace("#", "."), 10)
+                    x = round(x - width * 1.1)
+                    if x < 1:
+                        x = 1
                     cv2.putText(frame,
-                                Text,
-                                (X, round(Y + Height / 2)),
+                                text,
+                                (x, round(y + height / 2)),
                                 cv2.FONT_HERSHEY_SIMPLEX,
-                                Fontscale,
+                                font_scale,
                                 (180, 180, 180),
-                                Thickness,
+                                thickness,
                                 cv2.LINE_AA)
 
-            for graph in variables.graphs.values():
+            for graph_name in graphs.keys():
+                if graphs[graph_name]["show"] == False: continue
+                graph = graphs[graph_name]["data"]
                 last_point = None
-                for X in sorted(graph.keys(), key=lambda x: x):
-                    X, Y = convert_to_frame_coordinate((X - MinX) / (XAxisMax - MinX) if XAxisMax - MinX != 0 else 0, (MaxY - graph[X]) / (MaxY - MinY) if MaxY - MinY != 0 else 0)
-                    #if len(Graph[2]) == 1:
-                    #    cv2.circle(frame, (X, Y), 1, Graph[1], 2, cv2.LINE_AA)
+                for x in graph.keys():
+                    y = graph[x][0] # (value, time) -> value
+                    x, y = convert_to_frame_coordinate((x - min_x) / (x_axis_max - min_x) if x_axis_max - min_x != 0 else 0, (max_y - y) / (max_y - min_y) if max_y - min_y != 0 else 0)
+                    if len(graph.keys()) == 1:
+                        cv2.circle(frame, (x, y), 1, graphs[graph_name]["color"], 2, cv2.LINE_AA)
                     if last_point != None:
-                        cv2.line(frame, last_point, (X, Y), (255, 255, 255), 1, cv2.LINE_AA)
-                    last_point = (X, Y)
-
+                        cv2.line(frame, last_point, (x, y), graphs[graph_name]["color"], 1, cv2.LINE_AA)
+                    last_point = (x, y)
 
             ImageUI.Image(Image=frame,
                         X1=variables.graph_ui_position_x1,
                         Y1=variables.graph_ui_position_y1,
                         X2=variables.graph_ui_position_x2,
                         Y2=variables.graph_ui_position_y2,
-                        ID="GraphImage",
+                        ID="graph_image",
                         RoundCorners=20)
 
             last_content = content
-
-        else:
-
-            ImageUI.Image(Image=frame,
-                          X1=variables.graph_ui_position_x1,
-                          Y1=variables.graph_ui_position_y1,
-                          X2=variables.graph_ui_position_x2,
-                          Y2=variables.graph_ui_position_y2,
-                          ID="GraphImage",
-                          RoundCorners=20)
 
     except:
         crash_report("Graph - Error in function update", str(traceback.format_exc()))
