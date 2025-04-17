@@ -1,267 +1,126 @@
 import SimpleWindow
-import LogReader
-import Variables
-import Settings
-import Console
+import logreader
+import variables
+import settings
+import console
 import ImageUI
-import Image
-import Graph
-import Model
-import Mouse
+import image
+import graph
+import model
 import numpy
 import time
 import os
 
-SimpleWindow.Initialize(Name=Variables.WindowName,
-                        Size=(Variables.WindowWidth, Variables.WindowHeight),
-                        Position=(Variables.WindowX, Variables.WindowY),
-                        TitleBarColor=Variables.Background[0][0],
+SimpleWindow.Initialize(Name=variables.window_name,
+                        Size=(variables.window_width, variables.window_height),
+                        Position=(variables.window_x, variables.window_y),
+                        TitleBarColor=variables.background[0][0],
                         Resizable=True,
                         TopMost=False,
                         Foreground=True,
                         Minimized=False,
                         Undestroyable=False,
-                        Icon=f"{Variables.Path}Icon.ico",
+                        Icon=f"{variables.path}Icon.ico",
                         NoWarnings=False)
 
-LogReader.StartLogReader()
-Console.HideConsole()
-Mouse.Run()
+console.hide_console()
+logreader.start_log_reader()
+graph.start_mouse_tracking()
 
 ImageUI.Colors.SwitchEnabledColor = (30, 125, 255)
 ImageUI.Colors.SwitchEnabledHoverColor = (30, 125, 255)
 
-while Variables.Break == False:
+while variables.stop == False:
     Start = time.perf_counter()
 
-    WindowSize = SimpleWindow.GetSize(Name=Variables.WindowName)
-    WindowPosition = SimpleWindow.GetPosition(Name=Variables.WindowName)
+    window_size = SimpleWindow.GetSize(Name=variables.window_name)
+    window_position = SimpleWindow.GetPosition(Name=variables.window_name)
 
-    if WindowSize[0] != Variables.WindowWidth or WindowSize[1] != Variables.WindowHeight:
-        Variables.LastWindowResize = time.time()
-        Variables.WindowWidth = WindowSize[0]
-        Variables.WindowHeight = WindowSize[1]
-        Variables.GraphUIPositionX2 = WindowSize[0] - 6
-        Variables.GraphUIPositionY2 = WindowSize[1] - 6
-        Variables.Background = numpy.zeros((Variables.WindowHeight, Variables.WindowWidth, 3), dtype=numpy.uint8)
-        Variables.Background[:] = (28, 28, 28)
-        Settings.Set("Window", "Width", Variables.WindowWidth)
-        Settings.Set("Window", "Height", Variables.WindowHeight)
+    if window_size[0] != variables.window_width or window_size[1] != variables.window_height:
+        variables.last_window_resize = time.time()
+        variables.window_width = window_size[0]
+        variables.window_height = window_size[1]
+        variables.graph_ui_position_x2 = window_size[0] - 6
+        variables.graph_ui_position_y2 = window_size[1] - 6
+        variables.background = numpy.zeros((variables.window_height, variables.window_width, 3), dtype=numpy.uint8)
+        variables.background[:] = (28, 28, 28)
+        settings.set("ui", "width", variables.window_width)
+        settings.set("ui", "height", variables.window_height)
 
-    if WindowPosition[0] != Variables.WindowX or WindowPosition[1] != Variables.WindowY:
-        Variables.LastWindowMove = time.time()
-        Variables.WindowX = WindowPosition[0]
-        Variables.WindowY = WindowPosition[1]
-        Settings.Set("Window", "X", Variables.WindowX)
-        Settings.Set("Window", "Y", Variables.WindowY)
+    if window_position[0] != variables.window_x or window_position[1] != variables.window_y:
+        variables.last_window_move = time.time()
+        variables.window_x = window_position[0]
+        variables.window_y = window_position[1]
+        settings.set("ui", "x", variables.window_x)
+        settings.set("ui", "y", variables.window_y)
 
 
     Left = 0
-    Right = Variables.Background.shape[1] - 1
+    Right = variables.background.shape[1] - 1
     Top = 0
-    Bottom = Variables.Background.shape[0] - 1
+    Bottom = variables.background.shape[0] - 1
 
-    if Variables.LogPath != "":
-        Graph.Update()
-        Image.Update()
-        Model.Update()
+    if variables.log_path != "":
+        logreader.sync_data()
+
+        graph.update()
+        image.update()
+        model.update()
 
         ImageUI.Label(Text="TrainBoard",
                       X1=0,
                       Y1=0,
-                      X2=Variables.GraphUIPositionX1,
-                      Y2=Variables.GraphUIPositionY1,
+                      X2=variables.graph_ui_position_x1,
+                      Y2=variables.graph_ui_position_y1,
                       Align="Center",
-                      ID="LogPathLabel",
+                      ID="title_label",
                       FontSize=25,
                       FontType="Candarab")
 
         ImageUI.Button(Text="Graphs",
-                       X1=Variables.GraphUIPositionX1,
+                       X1=variables.graph_ui_position_x1,
                        Y1=5,
-                       X2=Variables.GraphUIPositionX1 + (Variables.GraphUIPositionX2 - Variables.GraphUIPositionX1) / 3 - 2.5,
-                       Y2=Variables.GraphUIPositionY1 - 5,
-                       ID="GraphsTab",
+                       X2=variables.graph_ui_position_x1 + (variables.graph_ui_position_x2 - variables.graph_ui_position_x1) / 3 - 2.5,
+                       Y2=variables.graph_ui_position_y1 - 5,
+                       ID="graphs_tab",
                        RoundCorners=10,
-                       Color=(30, 125, 255) if Variables.Tab == "Graphs" else ImageUI.Colors.ButtonColor,
-                       HoverColor=(35, 130, 255) if Variables.Tab == "Graphs" else ImageUI.Colors.ButtonHoverColor,
-                       TextColor=(0, 0, 0) if Variables.Tab == "Graphs" else (255, 255, 255),
-                       OnPress=lambda: {Settings.Set("UI", "Tab", "Graphs"), setattr(Variables, "Tab", "Graphs")})
+                       Color=(30, 125, 255) if variables.tab == "Graphs" else ImageUI.Colors.ButtonColor,
+                       HoverColor=(35, 130, 255) if variables.tab == "Graphs" else ImageUI.Colors.ButtonHoverColor,
+                       TextColor=(0, 0, 0) if variables.tab == "Graphs" else (255, 255, 255),
+                       OnPress=lambda: {settings.set("ui", "tab", "Graphs"), setattr(variables, "tab", "Graphs")})
 
         ImageUI.Button(Text="Images",
-                       X1=Variables.GraphUIPositionX1 + (Variables.GraphUIPositionX2 - Variables.GraphUIPositionX1) / 3 + 2.5,
+                       X1=variables.graph_ui_position_x1 + (variables.graph_ui_position_x2 - variables.graph_ui_position_x1) / 3 + 2.5,
                        Y1=5,
-                       X2=Variables.GraphUIPositionX1 + (Variables.GraphUIPositionX2 - Variables.GraphUIPositionX1) / 1.5 - 2.5,
-                       Y2=Variables.GraphUIPositionY1 - 5,
-                       ID="ImagesTab",
+                       X2=variables.graph_ui_position_x1 + (variables.graph_ui_position_x2 - variables.graph_ui_position_x1) / 1.5 - 2.5,
+                       Y2=variables.graph_ui_position_y1 - 5,
+                       ID="images_tab",
                        RoundCorners=10,
-                       Color=(30, 125, 255) if Variables.Tab == "Images" else ImageUI.Colors.ButtonColor,
-                       HoverColor=(35, 130, 255) if Variables.Tab == "Images" else ImageUI.Colors.ButtonHoverColor,
-                       TextColor=(0, 0, 0) if Variables.Tab == "Images" else (255, 255, 255),
-                       OnPress=lambda: {Settings.Set("UI", "Tab", "Images"), setattr(Variables, "Tab", "Images")})
+                       Color=(30, 125, 255) if variables.tab == "Images" else ImageUI.Colors.ButtonColor,
+                       HoverColor=(35, 130, 255) if variables.tab == "Images" else ImageUI.Colors.ButtonHoverColor,
+                       TextColor=(0, 0, 0) if variables.tab == "Images" else (255, 255, 255),
+                       OnPress=lambda: {settings.set("ui", "tab", "Images"), setattr(variables, "tab", "Images")})
 
         ImageUI.Button(Text="Models",
-                       X1=Variables.GraphUIPositionX1 + (Variables.GraphUIPositionX2 - Variables.GraphUIPositionX1) / 1.5 + 2.5,
+                       X1=variables.graph_ui_position_x1 + (variables.graph_ui_position_x2 - variables.graph_ui_position_x1) / 1.5 + 2.5,
                        Y1=5,
-                       X2=Variables.GraphUIPositionX2,
-                       Y2=Variables.GraphUIPositionY1 - 5,
-                       ID="ModelsTab",
+                       X2=variables.graph_ui_position_x2,
+                       Y2=variables.graph_ui_position_y1 - 5,
+                       ID="models_tab",
                        RoundCorners=10,
-                       Color=(30, 125, 255) if Variables.Tab == "Models" else ImageUI.Colors.ButtonColor,
-                       HoverColor=(35, 130, 255) if Variables.Tab == "Models" else ImageUI.Colors.ButtonHoverColor,
-                       TextColor=(0, 0, 0) if Variables.Tab == "Models" else (255, 255, 255),
-                       OnPress=lambda: {Settings.Set("UI", "Tab", "Models"), setattr(Variables, "Tab", "Models")})
-
-        if Variables.Tab == "Graphs":
-            for i, GraphName in enumerate(Variables.Graphs):
-                FileName = Variables.Graphs[GraphName]["FileName"]
-                ShowState = Variables.Graphs[GraphName]["Show"]
-                Data = Variables.Graphs[GraphName]["Data"]
-                ImageUI.Switch(Text=GraphName,
-                            X1=5,
-                            Y1=Variables.GraphUIPositionY1 + 10 + 30 * i,
-                            X2=Variables.GraphUIPositionX1 - 26,
-                            Y2=Variables.GraphUIPositionY1 + 35 + 30 * i,
-                            ID=f"GraphSwitch{GraphName}",
-                            State=ShowState,
-                            OnChange=lambda State, GraphName=GraphName: {
-                                Settings.Set("Graphs", Variables.LogPath + ":Show:" + GraphName, State),
-                                getattr(Variables, "Graphs").__setitem__(GraphName, {"FileName": FileName, "Show": State, "Data": Data})
-                            })
-
-                ColorImage = numpy.zeros((15, 15, 3), numpy.uint8)
-                ColorsFound = [Graph[1] for Graph in Variables.GraphContent if Graph[0] == GraphName]
-                ColorImage[:] = ColorsFound[0] if len(ColorsFound) > 0 else (28, 28, 28)
-                ImageUI.Image(Image=ColorImage,
-                              X1=Variables.GraphUIPositionX1 - 21,
-                              Y1=Variables.GraphUIPositionY1 + 15 + 30 * i,
-                              X2=Variables.GraphUIPositionX1 - 6,
-                              Y2=Variables.GraphUIPositionY1 + 30 + 30 * i,
-                              ID=f"GraphColor{GraphName}",
-                              RoundCorners=12)
-
-            ImageUI.Button(Text="Center the graph",
-                           X1=5,
-                           Y1=Variables.GraphUIPositionY2 - 85,
-                           X2=Variables.GraphUIPositionX1 - 5,
-                           Y2=Variables.GraphUIPositionY2 - 45,
-                           ID="CenterGraphButton",
-                           RoundCorners=10,
-                           OnPress=lambda: {
-                               setattr(Variables, "GraphPosition", (0, 0)),
-                               setattr(Variables, "GraphZoom", 1)
-                           })
-
-        elif Variables.Tab == "Images":
-            for i, ImageName in enumerate(Variables.Images):
-                if Variables.SelectedImage == ImageName:
-                    FileName = Variables.Images[ImageName]["FileName"]
-                    SwapRGBBGR = Variables.Images[ImageName]["SwapRGBBGR"]
-                    Data = Variables.Images[ImageName]["Data"]
-
-                    if Variables.SelectedImageEpoch not in (D[1] for D in Data):
-                        Variables.SelectedImageEpoch = max(D[1] for D in Data)
-                        ImageUI.SetInput(f"ImageInput{ImageName}", str(Variables.SelectedImageEpoch))
-
-                    ImageUI.Switch(Text="RGB instead of BGR",
-                                X1=5,
-                                Y1=Variables.GraphUIPositionY1 + 10,
-                                X2=Variables.GraphUIPositionX1 - 6,
-                                Y2=Variables.GraphUIPositionY1 + 35,
-                                ID=f"ImageSwitch{ImageName}",
-                                State=SwapRGBBGR,
-                                OnChange=lambda State, ImageName=ImageName: {
-                                    Settings.Set("Images", Variables.LogPath + ":SwapRGBBGR:" + ImageName, State),
-                                    getattr(Variables, "Images").__setitem__(ImageName, {"FileName": FileName, "SwapRGBBGR": State, "Data": Data})
-                                })
-
-                    ImageUI.Button(Text="Previous",
-                                   X1=5,
-                                   Y1=Variables.GraphUIPositionY1 + 40,
-                                   X2=Variables.GraphUIPositionX1 / 2 - 2.5,
-                                   Y2=Variables.GraphUIPositionY1 + 75,
-                                   ID=f"ImagePrevious{ImageName}",
-                                   RoundCorners=10,
-                                   OnPress=lambda ImageName=ImageName: {
-                                       setattr(Variables, "SelectedImageEpoch", next((D[1] for D in reversed(Data) if D[1] < Variables.SelectedImageEpoch), Variables.SelectedImageEpoch)),
-                                       ImageUI.SetInput(f"ImageInput{ImageName}", str(Variables.SelectedImageEpoch))
-                                   })
-
-                    ImageUI.Button(Text="Next",
-                                   X1=Variables.GraphUIPositionX1 / 2 + 2.5,
-                                   Y1=Variables.GraphUIPositionY1 + 40,
-                                   X2=Variables.GraphUIPositionX1 - 6,
-                                   Y2=Variables.GraphUIPositionY1 + 75,
-                                   ID=f"ImageNext{ImageName}",
-                                   RoundCorners=10,
-                                   OnPress=lambda ImageName=ImageName: {
-                                       setattr(Variables, "SelectedImageEpoch", next((D[1] for D in Data if D[1] > Variables.SelectedImageEpoch), Variables.SelectedImageEpoch)),
-                                       ImageUI.SetInput(f"ImageInput{ImageName}", str(Variables.SelectedImageEpoch))
-                                   })
-
-                    ImageUI.Input(X1=5,
-                                  Y1=Variables.GraphUIPositionY1 + 80,
-                                  X2=Variables.GraphUIPositionX1 / 2 - 2.5,
-                                  Y2=Variables.GraphUIPositionY1 + 115,
-                                  ID=f"ImageInput{ImageName}",
-                                  DefaultInput=str(Variables.SelectedImageEpoch),
-                                  Placeholder="Epoch",
-                                  TextAlign="Center",
-                                  OnChange=lambda Input, ImageName=ImageName: {
-                                      setattr(Variables, "SelectedImageEpoch", (int(Input) if int(Input) in (D[1] for D in Data) else Variables.SelectedImageEpoch) if Input.isdigit() else Variables.SelectedImageEpoch),
-                                      ImageUI.SetInput(f"ImageInput{ImageName}", str(Variables.SelectedImageEpoch)),
-                                      None if Input == str(Variables.SelectedImageEpoch) else ImageUI.Popup(Text="Invalid input",
-                                                                                                            StartX1=-100,
-                                                                                                            StartY1=Variables.GraphUIPositionY1 + 120,
-                                                                                                            StartX2=0,
-                                                                                                            StartY2=Variables.GraphUIPositionY1 + 150,
-                                                                                                            EndX1=5,
-                                                                                                            EndY1=Variables.GraphUIPositionY1 + 120,
-                                                                                                            EndX2=Variables.GraphUIPositionX1 - 6,
-                                                                                                            EndY2=Variables.GraphUIPositionY1 + 150,
-                                                                                                            ID="InvalidInputPopup",
-                                                                                                            ShowDuration=3,
-                                                                                                            RoundCorners=10,
-                                                                                                            TextColor=(50, 50, 255))
-                                  })
-
-                    ImageUI.Button(Text="Latest",
-                                   X1=Variables.GraphUIPositionX1 / 2 + 2.5,
-                                   Y1=Variables.GraphUIPositionY1 + 80,
-                                   X2=Variables.GraphUIPositionX1 - 6,
-                                   Y2=Variables.GraphUIPositionY1 + 115,
-                                   ID=f"ImageLatest{ImageName}",
-                                   RoundCorners=10,
-                                   OnPress=lambda ImageName=ImageName: {
-                                       setattr(Variables, "SelectedImageEpoch", max(D[1] for D in Data)),
-                                       ImageUI.SetInput(f"ImageInput{ImageName}", str(Variables.SelectedImageEpoch))
-                                   })
-
-            if list(Variables.Images.keys()) != []:
-                ImageUI.Dropdown(Title=Variables.SelectedImage,
-                                 Items=list(sorted(Variables.Images.keys(), key=lambda ImageName: Variables.Images[ImageName]["Data"][0][2])),
-                                 DefaultItem=Variables.SelectedImage,
-                                 X1=5,
-                                 Y1=Variables.GraphUIPositionY1 + 123,
-                                 X2=Variables.GraphUIPositionX1 - 6,
-                                 Y2=Variables.GraphUIPositionY1 + 158,
-                                 ID=f"ImageDropdown{list(Variables.Images.keys())}",
-                                 RoundCorners=10,
-                                 OnChange=lambda Item: {
-                                     setattr(Variables, "SelectedImageEpoch", max(D[1] for D in Variables.Images[Item]["Data"])) if Item != Variables.SelectedImage else None,
-                                     ImageUI.SetInput(f"ImageInput{Item}", str(Variables.SelectedImageEpoch)),
-                                     Settings.Set("Images", Variables.LogPath + ":Selected:", Item),
-                                     setattr(Variables, "SelectedImage", Item)
-                                 })
+                       Color=(30, 125, 255) if variables.tab == "Models" else ImageUI.Colors.ButtonColor,
+                       HoverColor=(35, 130, 255) if variables.tab == "Models" else ImageUI.Colors.ButtonHoverColor,
+                       TextColor=(0, 0, 0) if variables.tab == "Models" else (255, 255, 255),
+                       OnPress=lambda: {settings.set("ui", "tab", "Models"), setattr(variables, "tab", "Models")})
 
         ImageUI.Button(Text="Change the log path",
                        X1=5,
-                       Y1=Variables.GraphUIPositionY2 - 40,
-                       X2=Variables.GraphUIPositionX1 - 5,
-                       Y2=Variables.GraphUIPositionY2,
-                       ID="ChangeLogPathButton",
+                       Y1=variables.graph_ui_position_y2 - 40,
+                       X2=variables.graph_ui_position_x1 - 5,
+                       Y2=variables.graph_ui_position_y2,
+                       ID="log_path_change_button",
                        RoundCorners=10,
-                       OnPress=LogReader.ClearLogPath)
+                       OnPress=logreader.clear_log_path)
 
     else:
 
@@ -271,7 +130,7 @@ while Variables.Break == False:
                       X2=Right,
                       Y2=Bottom / 2 - 70,
                       Align="Center",
-                      ID="LogPathLabel",
+                      ID="title_label",
                       FontSize=25,
                       FontType="Candarab")
 
@@ -281,49 +140,50 @@ while Variables.Break == False:
                       Y2=Bottom / 2 + 20,
                       Placeholder="Enter the absolute path to the log folder",
                       TextAlign="Center",
-                      ID="LogPathInput",
+                      ID="log_path_input",
                       RoundCorners=10,
-                      OnChange=LogReader.SetLogPath)
+                      OnChange=logreader.set_log_path)
 
-        for i in range(min(len(Variables.LogPathHistory), 3)):
-            ImageUI.Button(Text=Variables.LogPathHistory[i],
+        for i in range(min(len(variables.log_path_history), 3)):
+            ImageUI.Button(Text=variables.log_path_history[i],
                            X1=Right / 2 - 225,
                            Y1=Bottom / 2 + 30 + 35 * i,
                            X2=Right / 2 + 190,
                            Y2=Bottom / 2 + 60 + 35 * i,
-                           ID=f"LogPathHistoryButton{i}Select",
+                           ID=f"log_path_history_button_{i}_select",
                            FontSize=12,
                            RoundCorners=10,
-                           OnPress=lambda i=i: {os.makedirs(Variables.LogPathHistory[i], exist_ok=True), LogReader.SetLogPath(Variables.LogPathHistory[i])})
+                           OnPress=lambda i=i: {os.makedirs(variables.log_path_history[i], exist_ok=True), logreader.set_log_path(variables.log_path_history[i])})
 
             ImageUI.Button(Text="X",
                            X1=Right / 2 + 195,
                            Y1=Bottom / 2 + 30 + 35 * i,
                            X2=Right / 2 + 225,
                            Y2=Bottom / 2 + 60 + 35 * i,
-                           ID=f"LogPathHistoryButton{i}Remove",
+                           ID=f"log_path_history_button_{i}_remove",
                            FontSize=12,
                            RoundCorners=10,
-                           OnPress=lambda i=i: {Variables.LogPathHistory.remove(Variables.LogPathHistory[i]), Settings.Set("Log", "PathHistory", Variables.LogPathHistory)})
+                           OnPress=lambda i=i: {variables.log_path_history.remove(variables.log_path_history[i]), settings.set("log", "path_history", variables.log_path_history)})
 
-    WindowHandle = SimpleWindow.GetHandle(Name=Variables.WindowName)
-    Frame = ImageUI.Update(WindowHWND=WindowHandle, Frame=Variables.Background)
+    window_handle = SimpleWindow.GetHandle(Name=variables.window_name)
+    frame = ImageUI.Update(WindowHWND=window_handle, Frame=variables.background)
 
-    SimpleWindow.Show(Name=Variables.WindowName, Frame=Frame)
-    if SimpleWindow.GetOpen(Name=Variables.WindowName) != True:
-        Console.RestoreConsole()
-        Variables.Break = True
+    SimpleWindow.Show(Name=variables.window_name, Frame=frame)
+    if SimpleWindow.GetOpen(Name=variables.window_name) != True:
+        console.restore_console()
+        variables.stop = True
 
-    Time = time.time()
-    if Time - Variables.LastMouseInput < 3 or Time - Variables.LastWindowResize < 3 or Time - Variables.LastWindowMove < 3:
-        Variables.DynamicFPS = 60
-    elif Variables.LogPath == "" or Time - Variables.LastMouseMove < 1:
-        Variables.DynamicFPS = 30
+    current_time = time.time()
+    if current_time - variables.last_mouse_input < 3 or current_time - variables.last_window_resize < 3 or current_time - variables.last_window_move < 3:
+        variables.dynamic_fps = 60
+    elif variables.log_path == "" or current_time - variables.last_mouse_move < 1:
+        variables.dynamic_fps = 30
     else:
-        Variables.DynamicFPS = 10
+        variables.dynamic_fps = 10
 
-    TimeToSleep = 1/Variables.DynamicFPS - (time.perf_counter() - Start)
+    TimeToSleep = 1/variables.dynamic_fps - (time.perf_counter() - Start)
     if TimeToSleep > 0:
         time.sleep(TimeToSleep)
 
-Console.CloseConsole()
+console.restore_console()
+console.close_console()
