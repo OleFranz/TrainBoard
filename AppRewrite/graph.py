@@ -145,7 +145,7 @@ def update():
         global last_content
         global frame
         global background
-        import sys
+
         if variables.tab == "Graphs":
             for i, graph_name in enumerate(graphs):
                 show_state = graphs[graph_name]["show"]

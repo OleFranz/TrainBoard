@@ -64,7 +64,7 @@ while variables.stop == False:
         logreader.sync_data()
 
         graph.update()
-    #    Image.Update()
+        image.update()
         model.update()
 
         ImageUI.Label(Text="TrainBoard",
@@ -112,108 +112,6 @@ while variables.stop == False:
                        HoverColor=(35, 130, 255) if variables.tab == "Models" else ImageUI.Colors.ButtonHoverColor,
                        TextColor=(0, 0, 0) if variables.tab == "Models" else (255, 255, 255),
                        OnPress=lambda: {settings.set("ui", "tab", "Models"), setattr(variables, "tab", "Models")})
-
-    #    elif variables.tab == "Images":
-    #        for i, ImageName in enumerate(Variables.Images):
-    #            if Variables.SelectedImage == ImageName:
-    #                FileName = Variables.Images[ImageName]["FileName"]
-    #                SwapRGBBGR = Variables.Images[ImageName]["SwapRGBBGR"]
-    #                Data = Variables.Images[ImageName]["Data"]
-#
-    #                if Variables.SelectedImageEpoch not in (D[1] for D in Data):
-    #                    Variables.SelectedImageEpoch = max(D[1] for D in Data)
-    #                    ImageUI.SetInput(f"ImageInput{ImageName}", str(Variables.SelectedImageEpoch))
-#
-    #                ImageUI.Switch(Text="RGB instead of BGR",
-    #                            X1=5,
-    #                            Y1=variables.graph_ui_position_y1 + 10,
-    #                            X2=variables.graph_ui_position_x1 - 6,
-    #                            Y2=variables.graph_ui_position_y1 + 35,
-    #                            ID=f"ImageSwitch{ImageName}",
-    #                            State=SwapRGBBGR,
-    #                            OnChange=lambda State, ImageName=ImageName: {
-    #                                settings.set("Images", Variables.LogPath + ":SwapRGBBGR:" + ImageName, State),
-    #                                getattr(Variables, "Images").__setitem__(ImageName, {"FileName": FileName, "SwapRGBBGR": State, "Data": Data})
-    #                            })
-#
-    #                ImageUI.Button(Text="Previous",
-    #                               X1=5,
-    #                               Y1=variables.graph_ui_position_y1 + 40,
-    #                               X2=variables.graph_ui_position_x1 / 2 - 2.5,
-    #                               Y2=variables.graph_ui_position_y1 + 75,
-    #                               ID=f"ImagePrevious{ImageName}",
-    #                               RoundCorners=10,
-    #                               OnPress=lambda ImageName=ImageName: {
-    #                                   setattr(Variables, "SelectedImageEpoch", next((D[1] for D in reversed(Data) if D[1] < Variables.SelectedImageEpoch), Variables.SelectedImageEpoch)),
-    #                                   ImageUI.SetInput(f"ImageInput{ImageName}", str(Variables.SelectedImageEpoch))
-    #                               })
-#
-    #                ImageUI.Button(Text="Next",
-    #                               X1=variables.graph_ui_position_x1 / 2 + 2.5,
-    #                               Y1=variables.graph_ui_position_y1 + 40,
-    #                               X2=variables.graph_ui_position_x1 - 6,
-    #                               Y2=variables.graph_ui_position_y1 + 75,
-    #                               ID=f"ImageNext{ImageName}",
-    #                               RoundCorners=10,
-    #                               OnPress=lambda ImageName=ImageName: {
-    #                                   setattr(Variables, "SelectedImageEpoch", next((D[1] for D in Data if D[1] > Variables.SelectedImageEpoch), Variables.SelectedImageEpoch)),
-    #                                   ImageUI.SetInput(f"ImageInput{ImageName}", str(Variables.SelectedImageEpoch))
-    #                               })
-#
-    #                ImageUI.Input(X1=5,
-    #                              Y1=variables.graph_ui_position_y1 + 80,
-    #                              X2=variables.graph_ui_position_x1 / 2 - 2.5,
-    #                              Y2=variables.graph_ui_position_y1 + 115,
-    #                              ID=f"ImageInput{ImageName}",
-    #                              DefaultInput=str(Variables.SelectedImageEpoch),
-    #                              Placeholder="Epoch",
-    #                              TextAlign="Center",
-    #                              OnChange=lambda Input, ImageName=ImageName: {
-    #                                  setattr(Variables, "SelectedImageEpoch", (int(Input) if int(Input) in (D[1] for D in Data) else Variables.SelectedImageEpoch) if Input.isdigit() else Variables.SelectedImageEpoch),
-    #                                  ImageUI.SetInput(f"ImageInput{ImageName}", str(Variables.SelectedImageEpoch)),
-    #                                  None if Input == str(Variables.SelectedImageEpoch) else ImageUI.Popup(Text="Invalid input",
-    #                                                                                                        StartX1=-100,
-    #                                                                                                        StartY1=variables.graph_ui_position_y1 + 120,
-    #                                                                                                        StartX2=0,
-    #                                                                                                        StartY2=variables.graph_ui_position_y1 + 150,
-    #                                                                                                        EndX1=5,
-    #                                                                                                        EndY1=variables.graph_ui_position_y1 + 120,
-    #                                                                                                        EndX2=variables.graph_ui_position_x1 - 6,
-    #                                                                                                        EndY2=variables.graph_ui_position_y1 + 150,
-    #                                                                                                        ID="InvalidInputPopup",
-    #                                                                                                        ShowDuration=3,
-    #                                                                                                        RoundCorners=10,
-    #                                                                                                        TextColor=(50, 50, 255))
-    #                              })
-#
-    #                ImageUI.Button(Text="Latest",
-    #                               X1=variables.graph_ui_position_x1 / 2 + 2.5,
-    #                               Y1=variables.graph_ui_position_y1 + 80,
-    #                               X2=variables.graph_ui_position_x1 - 6,
-    #                               Y2=variables.graph_ui_position_y1 + 115,
-    #                               ID=f"ImageLatest{ImageName}",
-    #                               RoundCorners=10,
-    #                               OnPress=lambda ImageName=ImageName: {
-    #                                   setattr(Variables, "SelectedImageEpoch", max(D[1] for D in Data)),
-    #                                   ImageUI.SetInput(f"ImageInput{ImageName}", str(Variables.SelectedImageEpoch))
-    #                               })
-#
-    #        if list(Variables.Images.keys()) != []:
-    #            ImageUI.Dropdown(Title=Variables.SelectedImage,
-    #                             Items=list(sorted(Variables.Images.keys(), key=lambda ImageName: Variables.Images[ImageName]["Data"][0][2])),
-    #                             DefaultItem=Variables.SelectedImage,
-    #                             X1=5,
-    #                             Y1=variables.graph_ui_position_y1 + 123,
-    #                             X2=variables.graph_ui_position_x1 - 6,
-    #                             Y2=variables.graph_ui_position_y1 + 158,
-    #                             ID=f"ImageDropdown{list(Variables.Images.keys())}",
-    #                             RoundCorners=10,
-    #                             OnChange=lambda Item: {
-    #                                 setattr(Variables, "SelectedImageEpoch", max(D[1] for D in Variables.Images[Item]["Data"])) if Item != Variables.SelectedImage else None,
-    #                                 ImageUI.SetInput(f"ImageInput{Item}", str(Variables.SelectedImageEpoch)),
-    #                                 settings.set("Images", Variables.LogPath + ":Selected:", Item),
-    #                                 setattr(Variables, "SelectedImage", Item)
-    #                             })
 
         ImageUI.Button(Text="Change the log path",
                        X1=5,
