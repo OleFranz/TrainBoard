@@ -41,6 +41,7 @@ def clear_log_path():
     graph.graph_position = 0, 0
     image.selected_image = ""
     image.selected_image_epoch = -1
+    variables.status = None
     variables.log_path = ""
     settings.set("log", "path", variables.log_path)
     ImageUI.SetInput("log_path_input", variables.log_path)
@@ -193,6 +194,53 @@ def log_reader_thread():
                 unsync_selected_image = unsync_temp_selected_image
 
                 last_files = files
+
+                if os.path.exists(os.path.join(variables.log_path, "status.pkl")):
+                    try:
+                        with open(os.path.join(variables.log_path, "status.pkl"), "rb") as file:
+                            status = pickle.load(file)
+                            epoch = status["epoch"]
+                            total_epochs = status["total_epochs"]
+                            epoch_time = status["epoch_time"]
+                            timestamp = status["time"]
+                            eta = round(status["eta"] - (time.perf_counter() - timestamp))
+                            if eta >= 0:
+
+                                time_since_last = time.perf_counter() - timestamp
+                                epoch_progress = min(round((time_since_last / epoch_time * 100) if epoch_time > 0 else 0), 100)
+
+                                MINUTE, HOUR, DAY, MONTH, YEAR = 60, 60*60, 24*60*60, 30*24*60*60, 365*24*60*60
+                                if eta < MINUTE:
+                                    eta = f"{eta:02d}s"
+                                elif eta < HOUR:
+                                    eta = f"{eta//MINUTE:02d}:{eta%MINUTE:02d}"
+                                elif eta < DAY:
+                                    h, r = divmod(eta, HOUR)
+                                    eta = f"{h:02d}:{r//MINUTE:02d}:{r%MINUTE:02d}"
+                                elif eta < MONTH:
+                                    d, r = divmod(eta, DAY)
+                                    h, r = divmod(r, HOUR)
+                                    eta = f"{d:02d}:{h:02d}:{r//MINUTE:02d}:{r%MINUTE:02d}"
+                                elif eta < YEAR:
+                                    mo, r = divmod(eta, MONTH)
+                                    d, r = divmod(r, DAY)
+                                    h, r = divmod(r, HOUR)
+                                    eta = f"{mo:02d}:{d:02d}:{h:02d}:{r//MINUTE:02d}:{r%MINUTE:02d}"
+                                else:
+                                    y, r = divmod(eta, YEAR)
+                                    mo, r = divmod(r, MONTH)
+                                    d, r = divmod(r, DAY)
+                                    h, r = divmod(r, HOUR)
+                                    eta = f"{y:02d}:{mo:02d}:{d:02d}:{h:02d}:{r//MINUTE:02d}:{r%MINUTE:02d}"
+
+                                variables.status = f"ETA: {eta}\nEpoch: {epoch}/{total_epochs}\nEpoch progress: {epoch_progress}%"
+
+                            else:
+
+                                variables.status = None
+
+                    except:
+                            crash_report("LogReader - Error while reading status", traceback.format_exc())
 
             elif os.path.exists(variables.log_path) == False:
 

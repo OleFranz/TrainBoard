@@ -20,6 +20,7 @@ class Create:
         self._graphs = {}
         self._images = {}
         self._models = {}
+        self._epoch_times = []
         os.makedirs(self._log_path, exist_ok=True)
         for file in os.listdir(self._log_path):
             if file.startswith("graph") or file.startswith("image") or file.startswith("model"):
@@ -149,6 +150,42 @@ class Create:
                         file)
 
         return {"total_parameters": total_parameters, "trainable_parameters": trainable_parameters, "non_trainable_parameters": non_trainable_parameters, "model_size": model_size}
+
+
+    def status(self, epoch:int, total_epochs:int, epoch_start_time:float, epoch_end_time:float, average_history_length:int=25):
+        """
+        Show the current status of the training progress
+
+        Parameters
+        ----------
+        epoch : int
+            The current epoch
+        epoch_start_time : float
+            The time when the epoch started
+        epoch_end_time : float
+            The time when the epoch ended
+        average_history_length : int, optional
+            The number of epochs to average the epoch time over for better time estimation, by default 25
+
+        Returns
+        -------
+        None
+        """
+        self._epoch_times.append(epoch_end_time - epoch_start_time)
+        if len(self._epoch_times) > 1 and average_history_length > 1:
+            epoch_times = self._epoch_times[-average_history_length:]
+            average_epoch_time = sum(epoch_times) / len(epoch_times)
+        else:
+            average_epoch_time = epoch_end_time - epoch_start_time
+        eta = (total_epochs - epoch) * average_epoch_time
+
+        with open(os.path.join(self._log_path, f"status.pkl"), "wb") as file:
+            pickle.dump({"eta": eta,
+                         "epoch": epoch,
+                         "total_epochs": total_epochs,
+                         "epoch_time": average_epoch_time,
+                         "time": time.perf_counter()},
+                        file)
 
 
     def clear_graph(self, name:str):

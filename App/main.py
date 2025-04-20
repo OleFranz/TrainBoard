@@ -113,6 +113,18 @@ while variables.stop == False:
                        TextColor=(0, 0, 0) if variables.tab == "Models" else (255, 255, 255),
                        OnPress=lambda: {settings.set("ui", "tab", "Models"), setattr(variables, "tab", "Models")})
 
+        if variables.status != None:
+            offset = 45 if (graph.graph_position != (0, 0) or graph.graph_zoom != 1) and variables.tab == "Graphs" else 0
+            ImageUI.Label(Text=variables.status,
+                       X1=5,
+                       Y1=variables.graph_ui_position_y2 - 97 - offset,
+                       X2=variables.graph_ui_position_x1 - 5,
+                       Y2=variables.graph_ui_position_y2 - 42 - offset,
+                       ID="eta_label",
+                       Align="Left",
+                       AlignPadding=1,
+                       NoCache=True) # disable cache, otherwise the label would use up too much memory over time
+
         ImageUI.Button(Text="Change the log path",
                        X1=5,
                        Y1=variables.graph_ui_position_y2 - 40,
@@ -181,9 +193,9 @@ while variables.stop == False:
     else:
         variables.dynamic_fps = 10
 
-    TimeToSleep = 1/variables.dynamic_fps - (time.perf_counter() - Start)
-    if TimeToSleep > 0:
-        time.sleep(TimeToSleep)
+    time_to_sleep = 1/variables.dynamic_fps - (time.perf_counter() - Start)
+    if time_to_sleep > 0:
+        time.sleep(time_to_sleep)
 
 console.restore_console()
 console.close_console()
