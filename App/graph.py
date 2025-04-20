@@ -217,10 +217,9 @@ def update():
             max_y = max_y + (max_y - min_y) * 0.1
 
             min_y = 0 if min_y < 0 else min_y
-            max_x += 1 if max_x == min_x else 0
 
-            x_axis_scale = max(1, min(5, max_x - 1))
-            x_axis_max = min_x + ((max_x + x_axis_scale - 2) // x_axis_scale) * x_axis_scale
+            x_axis_scale = (max(1, min(5, max_x - 1)) + 1 - min_x) if max_x != min_x else 1
+            x_axis_max = min_x + ((max_x + x_axis_scale - 1 - min_x) // x_axis_scale) * x_axis_scale
             y_axis_scale = max(5, round(graph_zoom * 5))
 
             for i in range(x_axis_scale + 1):
