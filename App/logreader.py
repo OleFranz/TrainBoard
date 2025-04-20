@@ -27,6 +27,7 @@ def clear_log_path():
     global unsync_graphs
     global unsync_images
     global unsync_models
+    global unsync_selected_image
     last_files = []
     unsync_graphs = {}
     unsync_images = {}
@@ -154,6 +155,11 @@ def log_reader_thread():
                             elif file.startswith("image"):
                                 name, image_data, epoch, timestamp = data["name"], data["image"], data["epoch"], data["time"]
                                 registered_files["images"][file] = {"name": name, "epoch": epoch} # register so we can delete the datapoint if the file is removed
+                                if name == image.selected_image:
+                                    current_max = max(unsync_temp_images[name]["data"].keys()) if name in unsync_temp_images and unsync_temp_images[name]["data"] else -1
+                                    if image.selected_image_epoch == current_max:
+                                        image.selected_image_epoch = epoch
+                                        ImageUI.SetInput("image_input", str(image.selected_image_epoch))
                                 if name not in unsync_temp_images:
                                     unsync_temp_images[name] = {"data": {},
                                                                 "swap_rgb_bgr": settings.get("image", f"{variables.log_path}:{name}:swap_rgb_bgr", False)}
