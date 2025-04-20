@@ -187,7 +187,7 @@ def update():
 
         content = (graph_position,
                    graph_zoom,
-                   [graph.values() for graph in graphs.values()],
+                   [len(graph["data"].keys()) for graph in graphs.values()],
                    variables.window_width,
                    variables.window_height,
                    variables.tab)
@@ -264,7 +264,7 @@ def update():
                 if graphs[graph_name]["show"] == False: continue
                 graph = graphs[graph_name]["data"]
                 last_point = None
-                for x in graph.keys():
+                for x in list(graph.keys()):
                     y = graph[x][0] # (value, time) -> value
                     x, y = convert_to_frame_coordinate((x - min_x) / (x_axis_max - min_x) if x_axis_max - min_x != 0 else 0, (max_y - y) / (max_y - min_y) if max_y - min_y != 0 else 0)
                     if len(graph.keys()) == 1:
@@ -273,15 +273,16 @@ def update():
                         cv2.line(frame, last_point, (x, y), graphs[graph_name]["color"], 1, cv2.LINE_AA)
                     last_point = (x, y)
 
-            ImageUI.Image(Image=frame,
-                        X1=variables.graph_ui_position_x1,
-                        Y1=variables.graph_ui_position_y1,
-                        X2=variables.graph_ui_position_x2,
-                        Y2=variables.graph_ui_position_y2,
-                        ID="graph_image",
-                        RoundCorners=20)
-
             last_content = content
+
+        if variables.tab == "Graphs":
+            ImageUI.Image(Image=frame,
+                          X1=variables.graph_ui_position_x1,
+                          Y1=variables.graph_ui_position_y1,
+                          X2=variables.graph_ui_position_x2,
+                          Y2=variables.graph_ui_position_y2,
+                          ID="graph_image",
+                          RoundCorners=20)
 
     except:
         crash_report("Graph - Error in function update", str(traceback.format_exc()))
