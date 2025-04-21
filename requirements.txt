@@ -1,6 +1,6 @@
 ./
 opencv-python
-SimpleWindow
+SimpleWindow<1.0
 ImageUI>=0.42
 pywin32
 pynput
