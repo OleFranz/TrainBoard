@@ -1,3 +1,4 @@
+import SimpleWindow
 import settings
 import numpy
 import os
@@ -18,6 +19,7 @@ last_window_resize = 0
 
 tab = settings.get("ui", "tab", "Graphs")
 
+window: SimpleWindow.Window = None
 window_name = "TrainBoard"
 window_x = settings.get("ui", "x", 100)
 window_y = settings.get("ui", "y", 100)

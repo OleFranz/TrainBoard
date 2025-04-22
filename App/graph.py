@@ -1,5 +1,4 @@
 from crashreport import crash_report
-import SimpleWindow
 import threading
 import traceback
 import variables
@@ -45,7 +44,7 @@ def start_mouse_tracking():
                 last_scroll_wheel = 0
                 last_mouse_position = 0, 0
                 while variables.stop == False:
-                    if SimpleWindow.GetForeground(variables.window_name) == False:
+                    if variables.window.get_foreground() == False:
                         time.sleep(0.1)
                         was_disabled = True
                         continue

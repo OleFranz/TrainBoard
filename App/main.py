@@ -11,17 +11,17 @@ import numpy
 import time
 import os
 
-SimpleWindow.Initialize(Name=variables.window_name,
-                        Size=(variables.window_width, variables.window_height),
-                        Position=(variables.window_x, variables.window_y),
-                        TitleBarColor=variables.background[0][0],
-                        Resizable=True,
-                        TopMost=False,
-                        Foreground=True,
-                        Minimized=False,
-                        Undestroyable=False,
-                        Icon=f"{variables.path}Icon.ico",
-                        NoWarnings=False)
+variables.window = SimpleWindow.Window(name=variables.window_name,
+                                       size=(variables.window_width, variables.window_height),
+                                       position=(variables.window_x, variables.window_y),
+                                       title_bar_color=tuple(map(int, variables.background[0][0])),
+                                       resizable=True,
+                                       topmost=False,
+                                       foreground=True,
+                                       minimized=False,
+                                       undestroyable=False,
+                                       icon=f"{variables.path}Icon.ico",
+                                       no_warnings=False)
 
 console.hide_console()
 logreader.start_log_reader()
@@ -33,8 +33,8 @@ ImageUI.Colors.SwitchEnabledHoverColor = (30, 125, 255)
 while variables.stop == False:
     Start = time.perf_counter()
 
-    window_size = SimpleWindow.GetSize(Name=variables.window_name)
-    window_position = SimpleWindow.GetPosition(Name=variables.window_name)
+    window_size = variables.window.get_size()
+    window_position = variables.window.get_position()
 
     if window_size[0] != variables.window_width or window_size[1] != variables.window_height:
         variables.last_window_resize = time.time()
@@ -177,11 +177,11 @@ while variables.stop == False:
                            RoundCorners=10,
                            OnPress=lambda i=i: {variables.log_path_history.remove(variables.log_path_history[i]), settings.set("log", "path_history", variables.log_path_history)})
 
-    window_handle = SimpleWindow.GetHandle(Name=variables.window_name)
+    window_handle = variables.window.get_handle()
     frame = ImageUI.Update(WindowHWND=window_handle, Frame=variables.background)
 
-    SimpleWindow.Show(Name=variables.window_name, Frame=frame)
-    if SimpleWindow.GetOpen(Name=variables.window_name) != True:
+    variables.window.show(frame)
+    if variables.window.get_open() != True:
         console.restore_console()
         variables.stop = True
 
