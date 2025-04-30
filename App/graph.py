@@ -187,6 +187,7 @@ def update():
         content = (graph_position,
                    graph_zoom,
                    [len(graph["data"].keys()) for graph in graphs.values()],
+                   [graph["show"] for graph in graphs.values()],
                    variables.window_width,
                    variables.window_height,
                    variables.tab)
